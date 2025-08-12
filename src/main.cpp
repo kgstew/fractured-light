@@ -1,3 +1,4 @@
+#include "patterns.h"
 #include <Arduino.h>
 #include <FastLED.h>
 
@@ -22,21 +23,21 @@ void setup()
     Serial.begin(115200);
 
     // Configure FastLED for 8 pins, each controlling 2 strips of 122 LEDs
-    FastLED.addLeds<WS2812B, PIN1, GRB>(
+    FastLED.addLeds<WS2812B, PIN1, RGB>(
         leds, 0 * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN, NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN);
-    FastLED.addLeds<WS2812B, PIN2, GRB>(
+    FastLED.addLeds<WS2812B, PIN2, RGB>(
         leds, 1 * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN, NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN);
-    FastLED.addLeds<WS2812B, PIN3, GRB>(
+    FastLED.addLeds<WS2812B, PIN3, RGB>(
         leds, 2 * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN, NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN);
-    FastLED.addLeds<WS2812B, PIN4, GRB>(
+    FastLED.addLeds<WS2812B, PIN4, RGB>(
         leds, 3 * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN, NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN);
-    FastLED.addLeds<WS2812B, PIN5, GRB>(
+    FastLED.addLeds<WS2812B, PIN5, RGB>(
         leds, 4 * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN, NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN);
-    FastLED.addLeds<WS2812B, PIN6, GRB>(
+    FastLED.addLeds<WS2812B, PIN6, RGB>(
         leds, 5 * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN, NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN);
-    FastLED.addLeds<WS2812B, PIN7, GRB>(
+    FastLED.addLeds<WS2812B, PIN7, RGB>(
         leds, 6 * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN, NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN);
-    FastLED.addLeds<WS2812B, PIN8, GRB>(
+    FastLED.addLeds<WS2812B, PIN8, RGB>(
         leds, 7 * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN, NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN);
 
     FastLED.setBrightness(255);
@@ -46,19 +47,6 @@ void setup()
 
 void loop()
 {
-    // Test pattern: cycle through each pin's LEDs
-    for (int pin = 0; pin < NUM_PINS; pin++) {
-        int startIndex = pin * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN;
-        int endIndex = startIndex + (NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN);
-
-        for (int i = startIndex; i < endIndex; i++) {
-            leds[i] = CRGB::Red;
-        }
-        FastLED.show();
-        delay(500);
-
-        for (int i = startIndex; i < endIndex; i++) {
-            leds[i] = CRGB::Black;
-        }
-    }
+    int pins[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+    breathingPattern(pins, 8, 50, CRGB::Blue);
 }
