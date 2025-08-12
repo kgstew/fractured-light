@@ -1,4 +1,5 @@
 #include "patterns.h"
+#include "program.h"
 #include <Arduino.h>
 #include <FastLED.h>
 
@@ -18,6 +19,7 @@
 #define PIN8 32
 
 CRGB leds[TOTAL_LEDS];
+Program* mainProgram;
 
 void setup()
 {
@@ -44,10 +46,47 @@ void setup()
     FastLED.setBrightness(255);
     FastLED.clear();
     FastLED.show();
+
+    // Create a program with 3 segments
+    mainProgram = new Program(3);
+
+    // Segment 1: Purple breathing on all pins for 10 seconds
+    int allPins[] = {0, 1, 2, 3, 4, 5, 6, 7};
+    PatternParams breathingParams;
+    breathingParams.breathing.speed = 30;
+    breathingParams.breathing.color = CRGB(128, 0, 128);
+    mainProgram->addSegment(0, new Segment(PATTERN_BREATHING, allPins, 8, 10, breathingParams));
+
+    // Segment 2: Flame pattern on all pins for 15 seconds
+    PatternParams flameParams;
+    flameParams.flame.speed = 50;
+    flameParams.flame.cooling = 55;
+    flameParams.flame.sparking = 120;
+    mainProgram->addSegment(1, new Segment(PATTERN_FLAME, allPins, 8, 15, flameParams));
+
+    // Segment 3: Teal breathing on pins 0-3 for 8 seconds
+    int halfPins[] = {0, 1, 2, 3};
+    PatternParams tealParams;
+    tealParams.breathing.speed = 20;
+    tealParams.breathing.color = CRGB(0, 128, 128);
+    mainProgram->addSegment(2, new Segment(PATTERN_BREATHING, halfPins, 4, 8, tealParams));
+
+    mainProgram->start();
 }
 
 void loop()
 {
-    int pins[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
-    flamepattern(pins, 8, 50, 55, 120);
+    mainProgram->update();
 }
+
+/**
+ *
+ * Pulsing different colors slowly in a breathing pattern.
+ *
+ * Purple and greens and teals
+ * Fire effect
+ *
+ * Spirals around the column like a tornado
+ * All 8 in sync and then breaking apart
+ *
+ */

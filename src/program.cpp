@@ -1,0 +1,110 @@
+#include "program.h"
+#include "patterns.h"
+#include <Arduino.h>
+
+Segment::Segment(PatternType type, int* pinArray, int pinCount, unsigned long durationSeconds, PatternParams parameters) {
+    patternType = type;
+    pins = new int[pinCount];
+    for (int i = 0; i < pinCount; i++) {
+        pins[i] = pinArray[i];
+    }
+    numPins = pinCount;
+    duration = durationSeconds * 1000;
+    params = parameters;
+    startTime = 0;
+    isActive = false;
+}
+
+Segment::~Segment() {
+    delete[] pins;
+}
+
+void Segment::start() {
+    startTime = millis();
+    isActive = true;
+}
+
+void Segment::stop() {
+    isActive = false;
+}
+
+bool Segment::isFinished() {
+    if (!isActive) return false;
+    return (millis() - startTime) >= duration;
+}
+
+void Segment::update() {
+    if (!isActive) return;
+
+    switch (patternType) {
+        case PATTERN_BREATHING:
+            breathingPattern(pins, numPins, params.breathing.speed, params.breathing.color);
+            break;
+        case PATTERN_FLAME:
+            flamepattern(pins, numPins, params.flame.speed, params.flame.cooling, params.flame.sparking);
+            break;
+    }
+}
+
+Program::Program(int segmentCount) {
+    segments = new Segment*[segmentCount];
+    numSegments = segmentCount;
+    currentSegment = 0;
+    isRunning = false;
+    
+    for (int i = 0; i < numSegments; i++) {
+        segments[i] = nullptr;
+    }
+}
+
+Program::~Program() {
+    for (int i = 0; i < numSegments; i++) {
+        delete segments[i];
+    }
+    delete[] segments;
+}
+
+void Program::addSegment(int index, Segment* segment) {
+    if (index >= 0 && index < numSegments) {
+        segments[index] = segment;
+    }
+}
+
+void Program::start() {
+    if (numSegments > 0 && segments[0] != nullptr) {
+        currentSegment = 0;
+        segments[currentSegment]->start();
+        isRunning = true;
+    }
+}
+
+void Program::stop() {
+    if (isRunning && currentSegment < numSegments && segments[currentSegment] != nullptr) {
+        segments[currentSegment]->stop();
+    }
+    isRunning = false;
+}
+
+void Program::update() {
+    if (!isRunning || currentSegment >= numSegments || segments[currentSegment] == nullptr) {
+        return;
+    }
+
+    segments[currentSegment]->update();
+
+    if (segments[currentSegment]->isFinished()) {
+        segments[currentSegment]->stop();
+        currentSegment++;
+
+        if (currentSegment >= numSegments) {
+            currentSegment = 0;
+            segments[currentSegment]->start();
+        } else {
+            segments[currentSegment]->start();
+        }
+    }
+}
+
+bool Program::getIsRunning() {
+    return isRunning;
+}
