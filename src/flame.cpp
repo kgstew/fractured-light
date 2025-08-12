@@ -6,20 +6,20 @@ void flamepattern(int pins[], int numPins, int speed, int cooling, int sparking)
     if (speed == 0)
         return;
 
-    static unsigned long lastUpdate[8] = {0};
+    static unsigned long lastUpdate[8] = { 0 };
     static uint8_t heat[8][NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN];
 
     unsigned long currentTime = millis();
 
     for (int p = 0; p < numPins; p++) {
         int pin = pins[p];
-        
+
         // Add random time offset per pin (0-30ms)
         unsigned long interval = map(speed, 1, 100, 100, 10) + random8(0, 31);
-        
+
         if (currentTime - lastUpdate[pin] >= interval) {
             lastUpdate[pin] = currentTime;
-            
+
             int startIndex = pin * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN;
             int ledsPerPin = NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN;
 
@@ -39,6 +39,14 @@ void flamepattern(int pins[], int numPins, int speed, int cooling, int sparking)
             if (random8() < pinSparking) {
                 int y = random8(7);
                 heat[pin][y] = qadd8(heat[pin][y], random8(160, 255));
+            }
+
+            // Add extra heat to bottom eighth for more yellow
+            int bottomEighth = ledsPerPin / 12;
+            for (int i = 0; i < bottomEighth; i++) {
+                if (random8() < 80) { // 80/255 chance
+                    heat[pin][i] = qadd8(heat[pin][i], random8(30, 80));
+                }
             }
 
             // Step 4: Map from heat cells to LED colors using HeatColor palette
