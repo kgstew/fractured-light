@@ -2,7 +2,7 @@
 #include "patterns.h"
 #include <Arduino.h>
 
-Segment::Segment(PatternType type, int* pinArray, int pinCount, unsigned long durationSeconds, PatternParams parameters) {
+Segment::Segment(PatternType type, int* pinArray, int pinCount, unsigned long durationSeconds, PatternParams parameters, bool reverseDirection) {
     patternType = type;
     pins = new int[pinCount];
     for (int i = 0; i < pinCount; i++) {
@@ -13,6 +13,7 @@ Segment::Segment(PatternType type, int* pinArray, int pinCount, unsigned long du
     params = parameters;
     startTime = 0;
     isActive = false;
+    reverse = reverseDirection;
 }
 
 Segment::~Segment() {
@@ -38,10 +39,10 @@ void Segment::update() {
 
     switch (patternType) {
         case PATTERN_BREATHING:
-            breathingPattern(pins, numPins, params.breathing.speed, params.breathing.color);
+            breathingPattern(pins, numPins, params.breathing.speed, params.breathing.color, reverse);
             break;
         case PATTERN_FLAME:
-            flamepattern(pins, numPins, params.flame.speed, params.flame.cooling, params.flame.sparking);
+            flamepattern(pins, numPins, params.flame.speed, params.flame.cooling, params.flame.sparking, reverse);
             break;
     }
 }

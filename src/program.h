@@ -31,9 +31,10 @@ private:
     PatternParams params;
     unsigned long startTime;
     bool isActive;
+    bool reverse;
 
 public:
-    Segment(PatternType type, int* pinArray, int pinCount, unsigned long durationSeconds, PatternParams parameters);
+    Segment(PatternType type, int* pinArray, int pinCount, unsigned long durationSeconds, PatternParams parameters, bool reverseDirection = false);
     ~Segment();
     void start();
     void stop();

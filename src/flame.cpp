@@ -1,7 +1,7 @@
 #include "patterns.h"
 #include <Arduino.h>
 
-void flamepattern(int pins[], int numPins, int speed, int cooling, int sparking)
+void flamepattern(int pins[], int numPins, int speed, int cooling, int sparking, bool reverse)
 {
     if (speed == 0)
         return;
@@ -55,7 +55,11 @@ void flamepattern(int pins[], int numPins, int speed, int cooling, int sparking)
                 uint8_t colorindex = scale8(heat[pin][j], 240);
                 CRGB color = HeatColor(colorindex);
 
-                leds[startIndex + j] = color;
+                if (reverse) {
+                    leds[startIndex + (ledsPerPin - 1 - j)] = color;
+                } else {
+                    leds[startIndex + j] = color;
+                }
             }
         }
     }

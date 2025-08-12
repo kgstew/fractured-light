@@ -8,7 +8,7 @@
 
 extern CRGB leds[];
 
-void breathingPattern(int pins[], int numPins, int speed, CRGB color);
-void flamepattern(int pins[], int numPins, int speed, int cooling, int sparking);
+void breathingPattern(int pins[], int numPins, int speed, CRGB color, bool reverse = false);
+void flamepattern(int pins[], int numPins, int speed, int cooling, int sparking, bool reverse = false);
 
 #endif

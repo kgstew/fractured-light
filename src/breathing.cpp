@@ -1,7 +1,7 @@
 #include "patterns.h"
 #include <Arduino.h>
 
-void breathingPattern(int pins[], int numPins, int speed, CRGB color)
+void breathingPattern(int pins[], int numPins, int speed, CRGB color, bool reverse)
 {
     if (speed == 0)
         return;
@@ -38,8 +38,14 @@ void breathingPattern(int pins[], int numPins, int speed, CRGB color)
             int startIndex = pin * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN;
             int endIndex = startIndex + (NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN);
 
-            for (int i = startIndex; i < endIndex; i++) {
-                leds[i] = scaledColor;
+            if (reverse) {
+                for (int i = endIndex - 1; i >= startIndex; i--) {
+                    leds[i] = scaledColor;
+                }
+            } else {
+                for (int i = startIndex; i < endIndex; i++) {
+                    leds[i] = scaledColor;
+                }
             }
         }
 
