@@ -125,7 +125,8 @@ void Segment::update()
             break;
         case PATTERN_POP:
             popPattern(pattern->pins, pattern->numPins, pattern->params.pop.speed, pattern->params.pop.holdDelay,
-                pattern->params.pop.palette, pattern->params.pop.paletteSize, pattern->reverse);
+                pattern->params.pop.palette, pattern->params.pop.paletteSize, pattern->params.pop.random, 
+                pattern->params.pop.accelerationTime, pattern->reverse);
             break;
         }
     }

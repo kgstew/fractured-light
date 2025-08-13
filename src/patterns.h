@@ -12,7 +12,7 @@ void breathingPattern(int pins[], int numPins, int speed, CRGB color, bool rever
 void flamepattern(int pins[], int numPins, int speed, int cooling, int sparking, bool reverse = false);
 void growPattern(int pins[], int numPins, int speed, int n, int fadeDelay, int holdDelay, CRGB palette[],
     int paletteSize, int transitionSpeed, int offsetDelay, bool reverse = false);
-void popPattern(int pins[], int numPins, int speed, int holdDelay, CRGB palette[], int paletteSize, bool reverse = false);
+void popPattern(int pins[], int numPins, int speed, int holdDelay, CRGB palette[], int paletteSize, bool random, int accelerationTime, bool reverse = false);
 
 void resetBreathingPattern();
 void resetFlamePattern();

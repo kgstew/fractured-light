@@ -110,14 +110,16 @@ void setup()
 
     mainProgram->addSegment(3, new Segment(patterns, 3, 5));
 
-    // Segment 5: Pop pattern on all pins for 20 seconds
+    // Segment 5: Pop pattern with random pins and acceleration
     static CRGB popPalette[]
         = { CRGB::Red, CRGB::Orange, CRGB::Yellow, CRGB::Green, CRGB::Blue, CRGB::Purple, CRGB::Pink, CRGB::White };
     PatternParams popParams;
-    popParams.pop.speed = 70;
-    popParams.pop.holdDelay = 500; // Hold each color for 1.5 seconds
+    popParams.pop.speed = 10; // Maximum speed after acceleration
+    popParams.pop.holdDelay = 300; // Hold each color for 300ms
     popParams.pop.palette = popPalette;
     popParams.pop.paletteSize = 8;
+    popParams.pop.random = true; // Randomize pin order
+    popParams.pop.accelerationTime = 8; // Accelerate over 8 seconds
     mainProgram->addSegment(4, new Segment(PATTERN_POP, allPins, 8, 20, popParams));
 
     mainProgram->start();

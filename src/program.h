@@ -45,6 +45,8 @@ struct PatternParams {
             int holdDelay;
             CRGB* palette;
             int paletteSize;
+            bool random;
+            int accelerationTime;
         } pop;
     };
 };
