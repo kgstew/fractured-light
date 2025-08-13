@@ -53,9 +53,9 @@ void setup()
     // Segment 1: Purple breathing on all pins for 10 seconds
     int allPins[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
     PatternParams breathingParams;
-    breathingParams.breathing.speed = 30;
+    breathingParams.breathing.speed = 50;
     breathingParams.breathing.color = CRGB(128, 0, 128);
-    mainProgram->addSegment(0, new Segment(PATTERN_BREATHING, allPins, 8, 10, breathingParams));
+    mainProgram->addSegment(0, new Segment(PATTERN_BREATHING, allPins, 8, 15, breathingParams));
 
     // Segment 2: Flame pattern on all pins for 15 seconds
     PatternParams flameParams;
@@ -77,16 +77,38 @@ void setup()
     growParams.grow.offsetDelay = 300;
     mainProgram->addSegment(2, new Segment(PATTERN_GROW, allPins, 8, 20, growParams, 1));
 
-    // Segment 4: Chase pattern on all pins for 15 seconds
-    static CRGB chasePalette[] = { CRGB::Red };
-    PatternParams chaseParams;
-    chaseParams.chase.speed = 75;
-    chaseParams.chase.palette = chasePalette;
-    chaseParams.chase.paletteSize = 6;
-    chaseParams.chase.transitionSpeed = 50;
-    chaseParams.chase.holdDelay = 1000;
-    chaseParams.chase.offsetDelay = 2000;
-    mainProgram->addSegment(3, new Segment(PATTERN_CHASE, allPins, 8, 30, chaseParams));
+    // Segment 4: Multi-pattern segment - different patterns on different pins
+    // Create pattern instances for different pin groups
+    PatternInstance* patterns[3];
+
+    // Breathing on pins 0-2
+    int breathingPins[] = { 0, 1, 2 };
+    PatternParams multiBreathingParams;
+    multiBreathingParams.breathing.speed = 60;
+    multiBreathingParams.breathing.color = CRGB(0, 255, 128); // Teal
+    patterns[0] = new PatternInstance(PATTERN_BREATHING, breathingPins, 3, multiBreathingParams);
+
+    // Flame on pins 3-5
+    int flamePins[] = { 3, 4, 5 };
+    PatternParams multiFlameParams;
+    multiFlameParams.flame.speed = 90;
+    multiFlameParams.flame.cooling = 60;
+    multiFlameParams.flame.sparking = 130;
+    patterns[1] = new PatternInstance(PATTERN_FLAME, flamePins, 3, multiFlameParams);
+
+    // Chase on pins 6-7
+    int multiChasePins[] = { 6, 7 };
+    static CRGB multiChasePalette[] = { CRGB::Purple, CRGB::Cyan };
+    PatternParams multiChaseParams;
+    multiChaseParams.chase.speed = 60;
+    multiChaseParams.chase.palette = multiChasePalette;
+    multiChaseParams.chase.paletteSize = 2;
+    multiChaseParams.chase.transitionSpeed = 45;
+    multiChaseParams.chase.holdDelay = 800;
+    multiChaseParams.chase.offsetDelay = 1500;
+    patterns[2] = new PatternInstance(PATTERN_CHASE, multiChasePins, 2, multiChaseParams);
+
+    mainProgram->addSegment(3, new Segment(patterns, 3, 25));
 
     mainProgram->start();
 }

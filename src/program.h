@@ -42,24 +42,34 @@ struct PatternParams {
     };
 };
 
-class Segment {
-private:
+struct PatternInstance {
     PatternType patternType;
     int* pins;
     int numPins;
-    unsigned long duration;
     PatternParams params;
+    bool reverse;
+    
+    PatternInstance(PatternType type, int* pinArray, int pinCount, PatternParams parameters, bool reverseDirection = false);
+    ~PatternInstance();
+};
+
+class Segment {
+private:
+    PatternInstance** patterns;
+    int numPatterns;
+    unsigned long duration;
     unsigned long startTime;
     bool isActive;
-    bool reverse;
 
 public:
     Segment(PatternType type, int* pinArray, int pinCount, unsigned long durationSeconds, PatternParams parameters, bool reverseDirection = false);
+    Segment(PatternInstance** patternArray, int patternCount, unsigned long durationSeconds);
     ~Segment();
     void start();
     void stop();
     bool isFinished();
     void update();
+    void addPattern(PatternInstance* pattern);
 };
 
 class Program {
