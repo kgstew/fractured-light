@@ -34,6 +34,7 @@ struct PatternParams {
             int paletteSize;
             int transitionSpeed;
             int holdDelay;
+            int offsetDelay;
         } chase;
     };
 };

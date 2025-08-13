@@ -11,7 +11,7 @@ extern CRGB leds[];
 void breathingPattern(int pins[], int numPins, int speed, CRGB color, bool reverse = false);
 void flamepattern(int pins[], int numPins, int speed, int cooling, int sparking, bool reverse = false);
 void growPattern(int pins[], int numPins, int speed, int n, int fadeDelay, int holdDelay, CRGB color, bool reverse = false);
-void chasePattern(int pins[], int numPins, int speed, CRGB palette[], int paletteSize, int transitionSpeed, int holdDelay, bool reverse = false);
+void chasePattern(int pins[], int numPins, int speed, CRGB palette[], int paletteSize, int transitionSpeed, int holdDelay, int offsetDelay, bool reverse = false);
 
 void resetBreathingPattern();
 void resetFlamePattern();

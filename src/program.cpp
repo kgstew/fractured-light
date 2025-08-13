@@ -64,7 +64,7 @@ void Segment::update() {
             growPattern(pins, numPins, params.grow.speed, params.grow.n, params.grow.fadeDelay, params.grow.holdDelay, params.grow.color, reverse);
             break;
         case PATTERN_CHASE:
-            chasePattern(pins, numPins, params.chase.speed, params.chase.palette, params.chase.paletteSize, params.chase.transitionSpeed, params.chase.holdDelay, reverse);
+            chasePattern(pins, numPins, params.chase.speed, params.chase.palette, params.chase.paletteSize, params.chase.transitionSpeed, params.chase.holdDelay, params.chase.offsetDelay, reverse);
             break;
     }
 }

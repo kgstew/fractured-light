@@ -73,7 +73,7 @@ void setup()
     growParams.grow.color = CRGB(0, 255, 128);
     mainProgram->addSegment(2, new Segment(PATTERN_GROW, allPins, 8, 12, growParams, 1));
 
-    // Segment 4: Chase pattern on all pins for 10 seconds
+    // Segment 4: Chase pattern on all pins for 15 seconds
     static CRGB chasePalette[] = { CRGB::Red, CRGB::Orange, CRGB::Yellow, CRGB::Green, CRGB::Blue, CRGB::Purple };
     PatternParams chaseParams;
     chaseParams.chase.speed = 75;
@@ -81,7 +81,8 @@ void setup()
     chaseParams.chase.paletteSize = 6;
     chaseParams.chase.transitionSpeed = 50;
     chaseParams.chase.holdDelay = 1000;
-    mainProgram->addSegment(3, new Segment(PATTERN_CHASE, allPins, 8, 10, chaseParams));
+    chaseParams.chase.offsetDelay = 200;
+    mainProgram->addSegment(3, new Segment(PATTERN_CHASE, allPins, 8, 15, chaseParams));
 
     mainProgram->start();
 }

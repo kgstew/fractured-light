@@ -8,8 +8,10 @@ static unsigned long phaseStartTime[8] = { 0 };
 static unsigned long colorTransitionTime[8] = { 0 };
 static int currentColorIndex[8] = { 0 };
 static float colorTransitionProgress[8] = { 0.0 };
+static unsigned long patternStartTime = 0;
+static bool patternInitialized = false;
 
-void chasePattern(int pins[], int numPins, int speed, CRGB palette[], int paletteSize, int transitionSpeed, int holdDelay, bool reverse)
+void chasePattern(int pins[], int numPins, int speed, CRGB palette[], int paletteSize, int transitionSpeed, int holdDelay, int offsetDelay, bool reverse)
 {
     if (speed == 0 || paletteSize == 0) return;
 
@@ -17,10 +19,28 @@ void chasePattern(int pins[], int numPins, int speed, CRGB palette[], int palett
     unsigned long chaseInterval = map(speed, 1, 100, 200, 20);
     unsigned long colorInterval = map(transitionSpeed, 1, 100, 100, 10);
 
+    // Initialize pattern start time on first call
+    if (!patternInitialized) {
+        patternStartTime = currentTime;
+        patternInitialized = true;
+    }
+
     for (int p = 0; p < numPins; p++) {
         int pin = pins[p];
         int startIndex = pin * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN;
         int totalLeds = NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN;
+
+        // Calculate offset delay for this pin
+        unsigned long pinOffsetDelay = (unsigned long)offsetDelay * p;
+        
+        // Check if this pin should start yet
+        if (currentTime - patternStartTime < pinOffsetDelay) {
+            // Pin hasn't started yet, keep LEDs off
+            for (int i = 0; i < totalLeds; i++) {
+                leds[startIndex + i] = CRGB::Black;
+            }
+            continue;
+        }
 
         // Update color transition
         if (currentTime - colorTransitionTime[pin] >= colorInterval) {
@@ -176,4 +196,6 @@ void resetChasePattern()
         currentColorIndex[i] = 0;
         colorTransitionProgress[i] = 0.0;
     }
+    patternStartTime = 0;
+    patternInitialized = false;
 }
