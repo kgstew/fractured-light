@@ -43,6 +43,19 @@ void Segment::start() {
 
 void Segment::stop() {
     isActive = false;
+    
+    // Clear all LEDs for this segment's pins when stopping
+    for (int p = 0; p < numPins; p++) {
+        int pin = pins[p];
+        int startIndex = pin * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN;
+        int totalLeds = NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN;
+        
+        for (int i = 0; i < totalLeds; i++) {
+            leds[startIndex + i] = CRGB::Black;
+        }
+    }
+    
+    FastLED.show();
 }
 
 bool Segment::isFinished() {
