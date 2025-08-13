@@ -6,119 +6,119 @@
     {
       "type": "wokwi-esp32-devkit-v1",
       "id": "esp",
-      "top": 2702.3,
-      "left": -177.8,
+      "top": -446.5,
+      "left": 273.4,
       "attrs": {}
     },
     {
       "type": "wokwi-neopixel-canvas",
       "id": "pin1_strip1",
-      "top": 0,
+      "top": 50,
       "left": 0,
       "attrs": { "rows": "122", "cols": "1", "maxbrightness": "5" }
     },
     {
       "type": "wokwi-neopixel-canvas",
       "id": "pin1_strip2",
-      "top": 122,
+      "top": 2796,
       "left": 0,
       "attrs": { "rows": "122", "cols": "1", "maxbrightness": "5" }
     },
     {
       "type": "wokwi-neopixel-canvas",
       "id": "pin2_strip1",
-      "top": 0,
+      "top": 50,
       "left": 100,
       "attrs": { "rows": "122", "cols": "1", "maxbrightness": "5" }
     },
     {
       "type": "wokwi-neopixel-canvas",
       "id": "pin2_strip2",
-      "top": 122,
+      "top": 2796,
       "left": 100,
       "attrs": { "rows": "122", "cols": "1", "maxbrightness": "5" }
     },
     {
       "type": "wokwi-neopixel-canvas",
       "id": "pin3_strip1",
-      "top": 0,
+      "top": 50,
       "left": 200,
       "attrs": { "rows": "122", "cols": "1", "maxbrightness": "5" }
     },
     {
       "type": "wokwi-neopixel-canvas",
       "id": "pin3_strip2",
-      "top": 122,
+      "top": 2796,
       "left": 200,
       "attrs": { "rows": "122", "cols": "1", "maxbrightness": "5" }
     },
     {
       "type": "wokwi-neopixel-canvas",
       "id": "pin4_strip1",
-      "top": 0,
+      "top": 50,
       "left": 300,
       "attrs": { "rows": "122", "cols": "1", "maxbrightness": "5" }
     },
     {
       "type": "wokwi-neopixel-canvas",
       "id": "pin4_strip2",
-      "top": 122,
+      "top": 2796,
       "left": 300,
       "attrs": { "rows": "122", "cols": "1", "maxbrightness": "5" }
     },
     {
       "type": "wokwi-neopixel-canvas",
       "id": "pin5_strip1",
-      "top": 0,
+      "top": 50,
       "left": 400,
       "attrs": { "rows": "122", "cols": "1", "maxbrightness": "5" }
     },
     {
       "type": "wokwi-neopixel-canvas",
       "id": "pin5_strip2",
-      "top": 122,
+      "top": 2796,
       "left": 400,
       "attrs": { "rows": "122", "cols": "1", "maxbrightness": "5" }
     },
     {
       "type": "wokwi-neopixel-canvas",
       "id": "pin6_strip1",
-      "top": 0,
+      "top": 50,
       "left": 500,
       "attrs": { "rows": "122", "cols": "1", "maxbrightness": "5" }
     },
     {
       "type": "wokwi-neopixel-canvas",
       "id": "pin6_strip2",
-      "top": 122,
+      "top": 2796,
       "left": 500,
       "attrs": { "rows": "122", "cols": "1", "maxbrightness": "5" }
     },
     {
       "type": "wokwi-neopixel-canvas",
       "id": "pin7_strip1",
-      "top": 0,
+      "top": 50,
       "left": 600,
       "attrs": { "rows": "122", "cols": "1", "maxbrightness": "5" }
     },
     {
       "type": "wokwi-neopixel-canvas",
       "id": "pin7_strip2",
-      "top": 122,
+      "top": 2796,
       "left": 600,
       "attrs": { "rows": "122", "cols": "1", "maxbrightness": "5" }
     },
     {
       "type": "wokwi-neopixel-canvas",
       "id": "pin8_strip1",
-      "top": 0,
+      "top": 50,
       "left": 700,
       "attrs": { "rows": "122", "cols": "1", "maxbrightness": "5" }
     },
     {
       "type": "wokwi-neopixel-canvas",
       "id": "pin8_strip2",
-      "top": 122,
+      "top": 2796,
       "left": 700,
       "attrs": { "rows": "122", "cols": "1", "maxbrightness": "5" }
     }
