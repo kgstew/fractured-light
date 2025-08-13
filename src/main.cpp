@@ -38,6 +38,7 @@ void setupWiFiAndWebSocket();
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t* payload, size_t length);
 void handleInterruptMessage(String message);
 CRGB parseColor(String colorStr);
+void testInterrupts();
 
 void setup()
 {
@@ -262,6 +263,37 @@ void handleInterruptMessage(String message)
             params.flame.cooling = json.hasOwnProperty("cooling") ? (int)json["cooling"] : 55;
             params.flame.sparking = json.hasOwnProperty("sparking") ? (int)json["sparking"] : 120;
             
+        } else if (patternName == "pop") {
+            patternType = PATTERN_POP;
+            params.pop.speed = json.hasOwnProperty("speed") ? (int)json["speed"] : 10;
+            params.pop.holdDelay = json.hasOwnProperty("holdDelay") ? (int)json["holdDelay"] : 300;
+            params.pop.random = json.hasOwnProperty("random") ? (bool)json["random"] : true;
+            params.pop.accelerationTime = json.hasOwnProperty("accelerationTime") ? (int)json["accelerationTime"] : 8;
+            
+            // Parse palette
+            static CRGB interruptPalette[8];
+            int paletteSize = 8;
+            if (json.hasOwnProperty("palette")) {
+                JSONVar palette = json["palette"];
+                paletteSize = 0;
+                for (int i = 0; i < 8 && palette.hasOwnProperty(String(i)); i++) {
+                    interruptPalette[i] = parseColor(String((const char*)palette[String(i)]));
+                    paletteSize++;
+                }
+            } else {
+                // Default pop palette
+                interruptPalette[0] = CRGB::Red;
+                interruptPalette[1] = CRGB::Orange;
+                interruptPalette[2] = CRGB::Yellow;
+                interruptPalette[3] = CRGB::Green;
+                interruptPalette[4] = CRGB::Blue;
+                interruptPalette[5] = CRGB::Purple;
+                interruptPalette[6] = CRGB::Pink;
+                interruptPalette[7] = CRGB::White;
+            }
+            params.pop.palette = interruptPalette;
+            params.pop.paletteSize = paletteSize;
+            
         } else {
             Serial.println("Unknown pattern type: " + patternName);
             return;
@@ -309,7 +341,9 @@ void setupWiFiAndWebSocket()
         html += "<h2>Supported patterns:</h2>";
         html += "<ul><li>spin (speed, separation, span, loop, continuous, blend, palette)</li>";
         html += "<li>breathing (speed, palette)</li>";
-        html += "<li>flame (speed, cooling, sparking)</li></ul>";
+        html += "<li>flame (speed, cooling, sparking)</li>";
+        html += "<li>pop (speed, holdDelay, random, accelerationTime, palette)</li></ul>";
+        html += "<p><strong>Note:</strong> testInterrupts() runs automatically every 5 seconds with random pop patterns</p>";
         html += "</body></html>";
         request->send(200, "text/html", html);
     });
@@ -323,10 +357,78 @@ void setupWiFiAndWebSocket()
     Serial.println("Web interface: http://192.168.4.1");
 }
 
+// Test function that triggers random pop pattern interrupts every 5 seconds
+void testInterrupts()
+{
+    static unsigned long lastTestTime = 0;
+    unsigned long currentTime = millis();
+    
+    // Trigger interrupt every 5 seconds
+    if (currentTime - lastTestTime >= 5000) {
+        lastTestTime = currentTime;
+        
+        // Generate random number of pins (1-4)
+        int numRandomPins = random(1, 5);
+        int randomPins[4];
+        
+        // Select random pins without duplicates
+        bool usedPins[8] = {false};
+        for (int i = 0; i < numRandomPins; i++) {
+            int pin;
+            do {
+                pin = random(0, 8);
+            } while (usedPins[pin]);
+            usedPins[pin] = true;
+            randomPins[i] = pin;
+        }
+        
+        // Setup pop pattern parameters
+        PatternParams popParams;
+        popParams.pop.speed = random(5, 20); // Random speed 5-20
+        popParams.pop.holdDelay = random(200, 500); // Random hold delay 200-500ms
+        popParams.pop.random = true;
+        popParams.pop.accelerationTime = random(3, 8); // Random acceleration 3-8 seconds
+        
+        // Random palette colors
+        static CRGB testPalette[8];
+        testPalette[0] = CRGB::Red;
+        testPalette[1] = CRGB::Orange;
+        testPalette[2] = CRGB::Yellow;
+        testPalette[3] = CRGB::Green;
+        testPalette[4] = CRGB::Blue;
+        testPalette[5] = CRGB::Purple;
+        testPalette[6] = CRGB::Pink;
+        testPalette[7] = CRGB::White;
+        
+        popParams.pop.palette = testPalette;
+        popParams.pop.paletteSize = 8;
+        
+        // Random duration between 2-6 seconds
+        unsigned long duration = random(2000, 6000);
+        
+        Serial.print("Test interrupt: Pop pattern on ");
+        Serial.print(numRandomPins);
+        Serial.print(" pins (");
+        for (int i = 0; i < numRandomPins; i++) {
+            Serial.print(randomPins[i]);
+            if (i < numRandomPins - 1) Serial.print(", ");
+        }
+        Serial.print(") for ");
+        Serial.print(duration);
+        Serial.println("ms");
+        
+        // Trigger the interrupt
+        mainProgram->triggerInterrupt(PATTERN_POP, randomPins, numRandomPins, duration, popParams);
+    }
+}
+
 void loop() 
 {
     // Handle WebSocket events
     webSocket.loop();
+    
+    // Test interrupts (comment out when not needed)
+    testInterrupts();
     
     // Update main program (patterns and interrupts)
     mainProgram->update();

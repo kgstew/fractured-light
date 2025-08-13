@@ -93,7 +93,7 @@ public:
     Segment(PatternType type, int* pinArray, int pinCount, unsigned long durationSeconds, PatternParams parameters, bool reverseDirection = false);
     Segment(PatternInstance** patternArray, int patternCount, unsigned long durationSeconds);
     ~Segment();
-    void start();
+    virtual void start();
     void stop();
     virtual bool isFinished();
     void update();
