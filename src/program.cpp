@@ -61,7 +61,7 @@ void Segment::update() {
             flamepattern(pins, numPins, params.flame.speed, params.flame.cooling, params.flame.sparking, reverse);
             break;
         case PATTERN_GROW:
-            growPattern(pins, numPins, params.grow.speed, params.grow.n, params.grow.fadeDelay, params.grow.holdDelay, params.grow.color, reverse);
+            growPattern(pins, numPins, params.grow.speed, params.grow.n, params.grow.fadeDelay, params.grow.holdDelay, params.grow.palette, params.grow.paletteSize, params.grow.transitionSpeed, params.grow.offsetDelay, reverse);
             break;
         case PATTERN_CHASE:
             chasePattern(pins, numPins, params.chase.speed, params.chase.palette, params.chase.paletteSize, params.chase.transitionSpeed, params.chase.holdDelay, params.chase.offsetDelay, reverse);

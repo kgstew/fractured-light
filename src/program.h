@@ -26,7 +26,10 @@ struct PatternParams {
             int n;
             int fadeDelay;
             int holdDelay;
-            CRGB color;
+            CRGB* palette;
+            int paletteSize;
+            int transitionSpeed;
+            int offsetDelay;
         } grow;
         struct {
             int speed;

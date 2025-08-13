@@ -7,17 +7,62 @@ static int activeLeds[8] = { 0 };
 static unsigned long phaseStartTime[8] = { 0 };
 static unsigned long nextLedTime[8] = { 0 };
 static float brightness[8][NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN] = { 0 };
+static unsigned long colorTransitionTime[8] = { 0 };
+static int currentColorIndex[8] = { 0 };
+static float colorTransitionProgress[8] = { 0.0 };
+static unsigned long patternStartTime = 0;
+static bool patternInitialized = false;
 
-void growPattern(int pins[], int numPins, int speed, int n, int fadeDelay, int holdDelay, CRGB color, bool reverse)
+void growPattern(int pins[], int numPins, int speed, int n, int fadeDelay, int holdDelay, CRGB palette[], int paletteSize, int transitionSpeed, int offsetDelay, bool reverse)
 {
-    if (n == 0 || speed == 0) return;
+    if (n == 0 || speed == 0 || paletteSize == 0) return;
     
     unsigned long currentTime = millis();
+    unsigned long colorInterval = map(transitionSpeed, 1, 100, 100, 10);
+
+    // Initialize pattern start time on first call
+    if (!patternInitialized) {
+        patternStartTime = currentTime;
+        patternInitialized = true;
+    }
 
     for (int p = 0; p < numPins; p++) {
         int pin = pins[p];
         int startIndex = pin * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN;
         int totalLeds = NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN;
+
+        // Calculate offset delay for this pin
+        unsigned long pinOffsetDelay = (unsigned long)offsetDelay * p;
+        
+        // Check if this pin should start yet
+        if (currentTime - patternStartTime < pinOffsetDelay) {
+            // Pin hasn't started yet, keep LEDs off
+            for (int i = 0; i < totalLeds; i++) {
+                leds[startIndex + i] = CRGB::Black;
+            }
+            continue;
+        }
+
+        // Update color transition
+        if (currentTime - colorTransitionTime[pin] >= colorInterval) {
+            colorTransitionTime[pin] = currentTime;
+            colorTransitionProgress[pin] += 0.02; // Increment transition progress
+            
+            if (colorTransitionProgress[pin] >= 1.0) {
+                colorTransitionProgress[pin] = 0.0;
+                currentColorIndex[pin] = (currentColorIndex[pin] + 1) % paletteSize;
+            }
+        }
+
+        // Calculate current color by blending between palette colors
+        CRGB currentColor;
+        if (paletteSize == 1) {
+            currentColor = palette[0];
+        } else {
+            int fromIndex = currentColorIndex[pin];
+            int toIndex = (currentColorIndex[pin] + 1) % paletteSize;
+            currentColor = palette[fromIndex].lerp8(palette[toIndex], (uint8_t)(colorTransitionProgress[pin] * 255));
+        }
 
         if (currentTime >= nextLedTime[pin]) {
             switch (currentPhase[pin]) {
@@ -109,7 +154,7 @@ void growPattern(int pins[], int numPins, int speed, int n, int fadeDelay, int h
                     if (brightness[pin][i] < 0.0) brightness[pin][i] = 0.0;
                 }
                 
-                CRGB scaledColor = color;
+                CRGB scaledColor = currentColor;
                 scaledColor.nscale8((uint8_t)brightness[pin][i]);
                 leds[ledIndex] = scaledColor;
             }
@@ -127,8 +172,13 @@ void resetGrowPattern()
         activeLeds[i] = 0;
         phaseStartTime[i] = 0;
         nextLedTime[i] = 0;
+        colorTransitionTime[i] = 0;
+        currentColorIndex[i] = 0;
+        colorTransitionProgress[i] = 0.0;
         for (int j = 0; j < NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN; j++) {
             brightness[i][j] = 0.0;
         }
     }
+    patternStartTime = 0;
+    patternInitialized = false;
 }
