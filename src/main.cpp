@@ -50,11 +50,13 @@ void setup()
     // Create a program with 6 segments
     mainProgram = new Program(6);
 
-    // Segment 1: Purple breathing on all pins for 10 seconds
+    // Segment 1: Multi-color breathing on all pins for 10 seconds
     int allPins[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+    static CRGB breathingPalette[] = { CRGB::Purple, CRGB::Magenta, CRGB::Blue, CRGB::Cyan };
     PatternParams breathingParams;
     breathingParams.breathing.speed = 50;
-    breathingParams.breathing.color = CRGB(128, 0, 128);
+    breathingParams.breathing.palette = breathingPalette;
+    breathingParams.breathing.paletteSize = 4;
     mainProgram->addSegment(0, new Segment(PATTERN_BREATHING, allPins, 8, 10, breathingParams));
 
     // Segment 2: Flame pattern on all pins for 15 seconds
@@ -83,9 +85,11 @@ void setup()
 
     // Breathing on pins 0-2
     int breathingPins[] = { 0, 1, 2 };
+    static CRGB multiBreathingPalette[] = { CRGB(0, 255, 128), CRGB::Green, CRGB::Teal };
     PatternParams multiBreathingParams;
     multiBreathingParams.breathing.speed = 60;
-    multiBreathingParams.breathing.color = CRGB(0, 255, 128); // Teal
+    multiBreathingParams.breathing.palette = multiBreathingPalette;
+    multiBreathingParams.breathing.paletteSize = 3;
     patterns[0] = new PatternInstance(PATTERN_BREATHING, breathingPins, 3, multiBreathingParams);
 
     // Flame on pins 3-5

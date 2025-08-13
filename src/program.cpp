@@ -114,7 +114,7 @@ void Segment::update()
         switch (pattern->patternType) {
         case PATTERN_BREATHING:
             breathingPattern(pattern->pins, pattern->numPins, pattern->params.breathing.speed,
-                pattern->params.breathing.color, pattern->reverse);
+                pattern->params.breathing.palette, pattern->params.breathing.paletteSize, pattern->reverse);
             break;
         case PATTERN_FLAME:
             flamepattern(pattern->pins, pattern->numPins, pattern->params.flame.speed, pattern->params.flame.cooling,

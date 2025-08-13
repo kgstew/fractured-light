@@ -16,7 +16,8 @@ struct PatternParams {
     union {
         struct {
             int speed;
-            CRGB color;
+            CRGB* palette;
+            int paletteSize;
         } breathing;
         struct {
             int speed;
