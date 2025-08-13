@@ -33,11 +33,32 @@ const char* password = "lightshow2024";
 AsyncWebServer server(80);
 WebSocketsServer webSocket = WebSocketsServer(81);
 
+// Sensor ID to LED pin mapping
+#define MAX_SENSORS 8
+
+struct SensorMapping {
+    uint8_t sensor_id;
+    uint8_t led_pins[4];  // Up to 4 pins per sensor
+    uint8_t num_pins;
+    bool active;
+    unsigned long last_trigger_time;
+};
+
+SensorMapping sensor_mappings[MAX_SENSORS] = {
+    { 1, { 0 }, 1, true, 0 },        // Sensor 1 -> Pin 0
+    { 2, { 1 }, 1, true, 0 },        // Sensor 2 -> Pin 1  
+    { 3, { 2 }, 1, true, 0 },        // Sensor 3 -> Pin 2
+    { 4, { 3, 4 }, 2, true, 0 },     // Sensor 4 -> Pins 3,4
+    { 5, { 5, 6 }, 2, true, 0 },     // Sensor 5 -> Pins 5,6
+    { 6, { 7 }, 1, true, 0 },        // Sensor 6 -> Pin 7
+    { 7, { 0, 1, 2, 3 }, 4, false, 0 },  // Sensor 7 -> Pins 0-3 (disabled)
+    { 8, { 4, 5, 6, 7 }, 4, false, 0 },  // Sensor 8 -> Pins 4-7 (disabled)
+};
+
 // Function declarations
 void setupWiFiAndWebSocket();
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t* payload, size_t length);
-void handleInterruptMessage(String message);
-CRGB parseColor(String colorStr);
+void handleSensorMessage(String message);
 void testInterrupts();
 
 void setup()
@@ -179,7 +200,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t* payload, size_t length)
 
     case WStype_TEXT:
         Serial.printf("[%u] Received: %s\n", num, payload);
-        handleInterruptMessage((char*)payload);
+        handleSensorMessage((char*)payload);
         break;
 
     default:
@@ -187,8 +208,8 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t* payload, size_t length)
     }
 }
 
-// Handle incoming interrupt messages
-void handleInterruptMessage(String message)
+// Handle incoming sensor messages
+void handleSensorMessage(String message)
 {
     JSONVar json = JSON.parse(message);
 
@@ -197,131 +218,71 @@ void handleInterruptMessage(String message)
         return;
     }
 
-    if (json.hasOwnProperty("type") && String((const char*)json["type"]) == "interrupt") {
-        String patternName = String((const char*)json["pattern"]);
-        unsigned long duration = (unsigned long)json["duration"];
-        
-        PatternType patternType;
-        PatternParams params;
-        
-        // Parse pattern type
-        if (patternName == "spin") {
-            patternType = PATTERN_SPIN;
-            params.spin.speed = json.hasOwnProperty("speed") ? (int)json["speed"] : 75;
-            params.spin.separation = json.hasOwnProperty("separation") ? (int)json["separation"] : 20;
-            params.spin.span = json.hasOwnProperty("span") ? (int)json["span"] : 15;
-            params.spin.loop = json.hasOwnProperty("loop") ? (bool)json["loop"] : true;
-            params.spin.continuous = json.hasOwnProperty("continuous") ? (bool)json["continuous"] : true;
-            params.spin.blend = json.hasOwnProperty("blend") ? (bool)json["blend"] : true;
-            
-            // Parse palette
-            static CRGB interruptPalette[8];
-            int paletteSize = 4;
-            if (json.hasOwnProperty("palette")) {
-                JSONVar palette = json["palette"];
-                paletteSize = 0;
-                for (int i = 0; i < 8 && palette.hasOwnProperty(String(i)); i++) {
-                    interruptPalette[i] = parseColor(String((const char*)palette[String(i)]));
-                    paletteSize++;
+    if (json.hasOwnProperty("sensorId") && json.hasOwnProperty("timestamp")) {
+        int sensor_id = (int)json["sensorId"];
+        unsigned long timestamp = (unsigned long)json["timestamp"];
+
+        Serial.print("Sensor message received - ID: ");
+        Serial.print(sensor_id);
+        Serial.print(", Timestamp: ");
+        Serial.println(timestamp);
+
+        // Find the sensor mapping
+        for (uint8_t i = 0; i < MAX_SENSORS; i++) {
+            if (sensor_mappings[i].active && sensor_mappings[i].sensor_id == sensor_id) {
+                // Check if enough time has passed since last trigger (10 seconds = 10000ms)
+                unsigned long current_time = millis();
+                unsigned long time_since_last = current_time - sensor_mappings[i].last_trigger_time;
+
+                if (sensor_mappings[i].last_trigger_time == 0 || time_since_last >= 10000) {
+                    // Update last trigger time
+                    sensor_mappings[i].last_trigger_time = current_time;
+
+                    // Setup flashbulb pattern parameters
+                    PatternParams flashbulbParams;
+                    flashbulbParams.flashbulb.flashDuration = 100;    // 100ms flash
+                    flashbulbParams.flashbulb.fadeDuration = 5000;    // 5 second fade
+                    flashbulbParams.flashbulb.transitionDuration = 2000; // 2 second transition back
+                    
+                    // Calculate total duration
+                    unsigned long duration = flashbulbParams.flashbulb.flashDuration + 
+                                           flashbulbParams.flashbulb.fadeDuration + 
+                                           flashbulbParams.flashbulb.transitionDuration;
+
+                    // Convert sensor pins to int array
+                    int sensorPins[4];
+                    for (uint8_t j = 0; j < sensor_mappings[i].num_pins; j++) {
+                        sensorPins[j] = (int)sensor_mappings[i].led_pins[j];
+                    }
+
+                    Serial.print("Flashbulb triggered on ");
+                    Serial.print(sensor_mappings[i].num_pins);
+                    Serial.print(" pins: ");
+                    for (uint8_t j = 0; j < sensor_mappings[i].num_pins; j++) {
+                        Serial.print(sensor_mappings[i].led_pins[j]);
+                        if (j < sensor_mappings[i].num_pins - 1)
+                            Serial.print(", ");
+                    }
+                    Serial.println();
+
+                    // Trigger the flashbulb interrupt
+                    mainProgram->triggerInterrupt(PATTERN_FLASHBULB, sensorPins, sensor_mappings[i].num_pins, duration, flashbulbParams);
+                } else {
+                    // Too soon since last trigger
+                    unsigned long wait_time = 10000 - time_since_last;
+                    Serial.print("Sensor ");
+                    Serial.print(sensor_id);
+                    Serial.print(" trigger ignored - wait ");
+                    Serial.print(wait_time / 1000);
+                    Serial.println(" more seconds");
                 }
-            } else {
-                // Default palette
-                interruptPalette[0] = CRGB::Red;
-                interruptPalette[1] = CRGB::Blue; 
-                interruptPalette[2] = CRGB::Green;
-                interruptPalette[3] = CRGB::Yellow;
+
+                break;
             }
-            params.spin.palette = interruptPalette;
-            params.spin.paletteSize = paletteSize;
-            
-        } else if (patternName == "breathing") {
-            patternType = PATTERN_BREATHING;
-            params.breathing.speed = json.hasOwnProperty("speed") ? (int)json["speed"] : 50;
-            
-            // Parse palette
-            static CRGB interruptPalette[8];
-            int paletteSize = 3;
-            if (json.hasOwnProperty("palette")) {
-                JSONVar palette = json["palette"];
-                paletteSize = 0;
-                for (int i = 0; i < 8 && palette.hasOwnProperty(String(i)); i++) {
-                    interruptPalette[i] = parseColor(String((const char*)palette[String(i)]));
-                    paletteSize++;
-                }
-            } else {
-                // Default palette
-                interruptPalette[0] = CRGB::Purple;
-                interruptPalette[1] = CRGB::Magenta;
-                interruptPalette[2] = CRGB::Blue;
-            }
-            params.breathing.palette = interruptPalette;
-            params.breathing.paletteSize = paletteSize;
-            
-        } else if (patternName == "flame") {
-            patternType = PATTERN_FLAME;
-            params.flame.speed = json.hasOwnProperty("speed") ? (int)json["speed"] : 80;
-            params.flame.cooling = json.hasOwnProperty("cooling") ? (int)json["cooling"] : 55;
-            params.flame.sparking = json.hasOwnProperty("sparking") ? (int)json["sparking"] : 120;
-            
-        } else if (patternName == "pop") {
-            patternType = PATTERN_POP;
-            params.pop.speed = json.hasOwnProperty("speed") ? (int)json["speed"] : 10;
-            params.pop.holdDelay = json.hasOwnProperty("holdDelay") ? (int)json["holdDelay"] : 300;
-            params.pop.random = json.hasOwnProperty("random") ? (bool)json["random"] : true;
-            params.pop.accelerationTime = json.hasOwnProperty("accelerationTime") ? (int)json["accelerationTime"] : 8;
-            
-            // Parse palette
-            static CRGB interruptPalette[8];
-            int paletteSize = 8;
-            if (json.hasOwnProperty("palette")) {
-                JSONVar palette = json["palette"];
-                paletteSize = 0;
-                for (int i = 0; i < 8 && palette.hasOwnProperty(String(i)); i++) {
-                    interruptPalette[i] = parseColor(String((const char*)palette[String(i)]));
-                    paletteSize++;
-                }
-            } else {
-                // Default pop palette
-                interruptPalette[0] = CRGB::Red;
-                interruptPalette[1] = CRGB::Orange;
-                interruptPalette[2] = CRGB::Yellow;
-                interruptPalette[3] = CRGB::Green;
-                interruptPalette[4] = CRGB::Blue;
-                interruptPalette[5] = CRGB::Purple;
-                interruptPalette[6] = CRGB::Pink;
-                interruptPalette[7] = CRGB::White;
-            }
-            params.pop.palette = interruptPalette;
-            params.pop.paletteSize = paletteSize;
-            
-        } else if (patternName == "flashbulb") {
-            patternType = PATTERN_FLASHBULB;
-            params.flashbulb.flashDuration = json.hasOwnProperty("flashDuration") ? (int)json["flashDuration"] : 100;
-            params.flashbulb.fadeDuration = json.hasOwnProperty("fadeDuration") ? (int)json["fadeDuration"] : 5000;
-            params.flashbulb.transitionDuration = json.hasOwnProperty("transitionDuration") ? (int)json["transitionDuration"] : 2000;
-            
-        } else {
-            Serial.println("Unknown pattern type: " + patternName);
-            return;
         }
-        
-        // Use all pins for interrupt
-        int allPins[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
-        
-        Serial.printf("Triggering %s interrupt for %lums\n", patternName.c_str(), duration);
-        mainProgram->triggerInterrupt(patternType, allPins, 8, duration, params);
     }
 }
 
-// Parse color string (hex format like "#FF0000")
-CRGB parseColor(String colorStr)
-{
-    if (colorStr.startsWith("#") && colorStr.length() == 7) {
-        long color = strtol(colorStr.c_str() + 1, NULL, 16);
-        return CRGB((color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF);
-    }
-    return CRGB::White; // Default fallback
-}
 
 // Setup WiFi Access Point and WebSocket server
 void setupWiFiAndWebSocket()
@@ -340,17 +301,27 @@ void setupWiFiAndWebSocket()
     // Setup basic web server
     server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
         String html = "<!DOCTYPE html><html><head><title>Fractured Light</title></head><body>";
-        html += "<h1>Fractured Light - LED Pattern Interrupts</h1>";
+        html += "<h1>Fractured Light - Sensor Triggered Flashbulbs</h1>";
         html += "<p>WebSocket server running on port 81</p>";
         html += "<h2>Send JSON messages with format:</h2>";
-        html += "<pre>{\"type\":\"interrupt\",\"pattern\":\"spin\",\"duration\":5000,\"speed\":75}</pre>";
-        html += "<h2>Supported patterns:</h2>";
-        html += "<ul><li>spin (speed, separation, span, loop, continuous, blend, palette)</li>";
-        html += "<li>breathing (speed, palette)</li>";
-        html += "<li>flame (speed, cooling, sparking)</li>";
-        html += "<li>pop (speed, holdDelay, random, accelerationTime, palette)</li>";
-        html += "<li>flashbulb (flashDuration, fadeDuration, transitionDuration)</li></ul>";
-        html += "<p><strong>Note:</strong> testInterrupts() runs automatically every 10 seconds with random flashbulb patterns</p>";
+        html += "<pre>{\"sensorId\": 1, \"timestamp\": 1234567890}</pre>";
+        html += "<h2>Sensor Mappings:</h2><ul>";
+        
+        for (uint8_t i = 0; i < MAX_SENSORS; i++) {
+            if (sensor_mappings[i].active) {
+                html += "<li>Sensor " + String(sensor_mappings[i].sensor_id) + " -> Pins: ";
+                for (uint8_t j = 0; j < sensor_mappings[i].num_pins; j++) {
+                    html += String(sensor_mappings[i].led_pins[j]);
+                    if (j < sensor_mappings[i].num_pins - 1)
+                        html += ", ";
+                }
+                html += " (Flashbulb)</li>";
+            }
+        }
+        
+        html += "</ul>";
+        html += "<p><strong>Note:</strong> Each sensor has a 10-second cooldown period</p>";
+        html += "<p><strong>Test:</strong> Random flashbulb patterns trigger every 10 seconds</p>";
         html += "</body></html>";
         request->send(200, "text/html", html);
     });
