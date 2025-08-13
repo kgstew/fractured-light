@@ -50,23 +50,36 @@ void setup()
     // Create a program with 6 segments
     mainProgram = new Program(6);
 
-    // Segment 1: Multi-color breathing on all pins for 10 seconds
+    // Segment 1: Spin pattern test on all pins for 15 seconds
     int allPins[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+    static CRGB spinPalette[] = { CRGB::Red, CRGB::Blue, CRGB::Green, CRGB::Yellow };
+    PatternParams spinParams;
+    spinParams.spin.speed = 75; // Medium-fast speed
+    spinParams.spin.separation = 20; // 20 LEDs of black space between colors
+    spinParams.spin.span = 15; // Each color fills 15 LEDs
+    spinParams.spin.palette = spinPalette;
+    spinParams.spin.paletteSize = 4;
+    spinParams.spin.loop = true; // Fill entire strip with repeating pattern
+    spinParams.spin.continuous = true; // Use span/separation pattern instead of all LEDs
+    spinParams.spin.blend = true; // Smooth color transitions using FastLED lerp8
+    mainProgram->addSegment(0, new Segment(PATTERN_SPIN, allPins, 8, 15, spinParams));
+
+    // Segment 2: Multi-color breathing on all pins for 10 seconds
     static CRGB breathingPalette[] = { CRGB::Purple, CRGB::Magenta, CRGB::Blue, CRGB::Cyan };
     PatternParams breathingParams;
     breathingParams.breathing.speed = 50;
     breathingParams.breathing.palette = breathingPalette;
     breathingParams.breathing.paletteSize = 4;
-    mainProgram->addSegment(0, new Segment(PATTERN_BREATHING, allPins, 8, 10, breathingParams));
+    mainProgram->addSegment(1, new Segment(PATTERN_BREATHING, allPins, 8, 10, breathingParams));
 
-    // Segment 2: Flame pattern on all pins for 15 seconds
+    // Segment 3: Flame pattern on all pins for 15 seconds
     PatternParams flameParams;
     flameParams.flame.speed = 80;
     flameParams.flame.cooling = 55;
     flameParams.flame.sparking = 120;
-    mainProgram->addSegment(1, new Segment(PATTERN_FLAME, allPins, 8, 10, flameParams, 1));
+    mainProgram->addSegment(2, new Segment(PATTERN_FLAME, allPins, 8, 10, flameParams, 1));
 
-    // Segment 3: Grow pattern on all pins for 20 seconds
+    // Segment 4: Grow pattern on all pins for 20 seconds
     static CRGB growPalette[] = { CRGB::Cyan, CRGB::Blue, CRGB::Purple, CRGB::Magenta, CRGB::Red, CRGB::Orange };
     PatternParams growParams;
     growParams.grow.speed = 60;
@@ -77,9 +90,9 @@ void setup()
     growParams.grow.paletteSize = 6;
     growParams.grow.transitionSpeed = 40;
     growParams.grow.offsetDelay = 1000;
-    mainProgram->addSegment(2, new Segment(PATTERN_GROW, allPins, 8, 10, growParams, 1));
+    mainProgram->addSegment(3, new Segment(PATTERN_GROW, allPins, 8, 10, growParams, 1));
 
-    // Segment 4: Multi-pattern segment - different patterns on different pins
+    // Segment 5: Multi-pattern segment - different patterns on different pins
     // Create pattern instances for different pin groups
     PatternInstance* patterns[3];
 
@@ -112,9 +125,9 @@ void setup()
     growParams2.grow.offsetDelay = 1000;
     patterns[2] = new PatternInstance(PATTERN_GROW, growPins, 2, growParams2);
 
-    mainProgram->addSegment(3, new Segment(patterns, 3, 5));
+    mainProgram->addSegment(4, new Segment(patterns, 3, 5));
 
-    // Segment 5: Pop pattern with random pins and acceleration
+    // Segment 6: Pop pattern with random pins and acceleration
     static CRGB popPalette[]
         = { CRGB::Red, CRGB::Orange, CRGB::Yellow, CRGB::Green, CRGB::Blue, CRGB::Purple, CRGB::Pink, CRGB::White };
     PatternParams popParams;
@@ -124,20 +137,7 @@ void setup()
     popParams.pop.paletteSize = 8;
     popParams.pop.random = true; // Randomize pin order
     popParams.pop.accelerationTime = 8; // Accelerate over 8 seconds
-    mainProgram->addSegment(4, new Segment(PATTERN_POP, allPins, 8, 20, popParams));
-
-    // Segment 6: Spin pattern test on all pins for 15 seconds
-    static CRGB spinPalette[] = { CRGB::Red, CRGB::Blue, CRGB::Green, CRGB::Yellow };
-    PatternParams spinParams;
-    spinParams.spin.speed = 75; // Medium-fast speed
-    spinParams.spin.separation = 20; // 20 LEDs of black space between colors
-    spinParams.spin.span = 15; // Each color fills 15 LEDs
-    spinParams.spin.palette = spinPalette;
-    spinParams.spin.paletteSize = 4;
-    spinParams.spin.loop = true; // Fill entire strip with repeating pattern
-    spinParams.spin.continuous = false; // Use span/separation pattern instead of all LEDs
-    spinParams.spin.blend = true; // Smooth color transitions using FastLED lerp8
-    mainProgram->addSegment(5, new Segment(PATTERN_SPIN, allPins, 8, 15, spinParams));
+    mainProgram->addSegment(5, new Segment(PATTERN_POP, allPins, 8, 20, popParams));
 
     mainProgram->start();
 }
