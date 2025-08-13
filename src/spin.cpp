@@ -23,6 +23,12 @@ void spinPattern(int pins[], int numPins, int speed, int separation, int span, C
         
         for (int p = 0; p < numPins; p++) {
             int pin = pins[p];
+            
+            // Skip pins that are currently being used by flashbulb
+            if (isPinUsedByFlashbulb(pin)) {
+                continue;
+            }
+            
             int startIndex = pin * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN;
             int totalLeds = NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN;
             
@@ -112,7 +118,7 @@ void spinPattern(int pins[], int numPins, int speed, int separation, int span, C
                 }
             }
             
-            // Move to next position
+            // Move to next position (always update to keep patterns in sync)
             currentPosition[pin] = (currentPosition[pin] + 1) % totalLeds;
         }
         

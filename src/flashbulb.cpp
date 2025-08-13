@@ -12,6 +12,7 @@ enum FlashbulbState {
 struct FlashbulbData {
     FlashbulbState state;
     unsigned long startTime;
+    unsigned long phaseStartTime;
     unsigned long flashDuration;
     unsigned long fadeDuration;
     unsigned long transitionDuration;
@@ -21,12 +22,14 @@ struct FlashbulbData {
 
 static FlashbulbData flashbulbData[8];
 static bool flashbulbInitialized = false;
+static bool flashbulbCompleted = false;
 
 void resetFlashbulbPattern()
 {
     for (int i = 0; i < 8; i++) {
         flashbulbData[i].state = FLASHBULB_COMPLETE;
         flashbulbData[i].startTime = 0;
+        flashbulbData[i].phaseStartTime = 0;
         if (flashbulbData[i].savedColors != nullptr) {
             delete[] flashbulbData[i].savedColors;
             flashbulbData[i].savedColors = nullptr;
@@ -34,6 +37,7 @@ void resetFlashbulbPattern()
         flashbulbData[i].numSavedColors = 0;
     }
     flashbulbInitialized = false;
+    flashbulbCompleted = false;
 }
 
 void flashbulbPattern(int pins[], int numPins, int flashDuration, int fadeDuration, int transitionDuration, bool reverse)
@@ -44,6 +48,7 @@ void flashbulbPattern(int pins[], int numPins, int flashDuration, int fadeDurati
     
     // Initialize on first call
     if (!flashbulbInitialized) {
+        Serial.println("Flashbulb: Initializing");
         for (int p = 0; p < numPins; p++) {
             int pin = pins[p];
             if (pin >= 8) continue;
@@ -51,6 +56,7 @@ void flashbulbPattern(int pins[], int numPins, int flashDuration, int fadeDurati
             FlashbulbData& data = flashbulbData[pin];
             data.state = FLASHBULB_FLASH;
             data.startTime = currentTime;
+            data.phaseStartTime = currentTime;
             data.flashDuration = flashDuration;
             data.fadeDuration = fadeDuration;
             data.transitionDuration = transitionDuration;
@@ -66,13 +72,17 @@ void flashbulbPattern(int pins[], int numPins, int flashDuration, int fadeDurati
                 data.savedColors[i] = leds[startIndex + i];
             }
             
-            // Set to white immediately
+            // Set to white immediately (only affected pins)
             for (int i = 0; i < totalLeds; i++) {
-                leds[startIndex + i] = CRGB::White;
+                int ledIndex = reverse ? (startIndex + totalLeds - 1 - i) : (startIndex + i);
+                leds[ledIndex] = CRGB::White;
             }
+            
+            Serial.printf("Flashbulb: Pin %d initialized - Flash:%dms Fade:%dms Transition:%dms\n", 
+                         pin, flashDuration, fadeDuration, transitionDuration);
         }
         flashbulbInitialized = true;
-        FastLED.show();
+        // Don't call FastLED.show() here - let the main program handle it
         return;
     }
     
@@ -87,7 +97,7 @@ void flashbulbPattern(int pins[], int numPins, int flashDuration, int fadeDurati
         if (data.state == FLASHBULB_COMPLETE) continue;
         
         allComplete = false;
-        unsigned long elapsed = currentTime - data.startTime;
+        unsigned long elapsed = currentTime - data.phaseStartTime;
         int startIndex = pin * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN;
         int totalLeds = NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN;
         
@@ -96,7 +106,8 @@ void flashbulbPattern(int pins[], int numPins, int flashDuration, int fadeDurati
                 if (elapsed >= data.flashDuration) {
                     // Start fade to black
                     data.state = FLASHBULB_FADE_TO_BLACK;
-                    data.startTime = currentTime;
+                    data.phaseStartTime = currentTime;
+                    Serial.printf("Flashbulb: Pin %d starting fade to black\n", pin);
                 } else {
                     // Keep white during flash
                     for (int i = 0; i < totalLeds; i++) {
@@ -110,13 +121,14 @@ void flashbulbPattern(int pins[], int numPins, int flashDuration, int fadeDurati
                 if (elapsed >= data.fadeDuration) {
                     // Start transition back
                     data.state = FLASHBULB_TRANSITION_BACK;
-                    data.startTime = currentTime;
+                    data.phaseStartTime = currentTime;
                     
                     // Set to black
                     for (int i = 0; i < totalLeds; i++) {
                         int ledIndex = reverse ? (startIndex + totalLeds - 1 - i) : (startIndex + i);
                         leds[ledIndex] = CRGB::Black;
                     }
+                    Serial.printf("Flashbulb: Pin %d starting transition back\n", pin);
                 } else {
                     // Fade from white to black
                     float fadeProgress = (float)elapsed / data.fadeDuration;
@@ -139,6 +151,7 @@ void flashbulbPattern(int pins[], int numPins, int flashDuration, int fadeDurati
                         int ledIndex = reverse ? (startIndex + totalLeds - 1 - i) : (startIndex + i);
                         leds[ledIndex] = data.savedColors[i];
                     }
+                    Serial.printf("Flashbulb: Pin %d completed\n", pin);
                 } else {
                     // Blend from black to saved colors
                     float transitionProgress = (float)elapsed / data.transitionDuration;
@@ -156,10 +169,26 @@ void flashbulbPattern(int pins[], int numPins, int flashDuration, int fadeDurati
         }
     }
     
-    // If all pins are complete, reset for next use
+    // Return whether all pins have completed their flashbulb sequence
+    // This will be used by the interrupt system to know when to resume
     if (allComplete) {
-        resetFlashbulbPattern();
+        Serial.println("Flashbulb: All pins completed");
+        flashbulbCompleted = true;
     }
     
+    // Show the LED changes
     FastLED.show();
+}
+
+bool isFlashbulbComplete()
+{
+    return flashbulbCompleted;
+}
+
+bool isPinUsedByFlashbulb(int pin)
+{
+    if (!flashbulbInitialized || pin >= 8) {
+        return false;
+    }
+    return flashbulbData[pin].state != FLASHBULB_COMPLETE;
 }

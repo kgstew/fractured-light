@@ -14,6 +14,11 @@ void flamepattern(int pins[], int numPins, int speed, int cooling, int sparking,
     for (int p = 0; p < numPins; p++) {
         int pin = pins[p];
 
+        // Skip pins that are currently being used by flashbulb
+        if (isPinUsedByFlashbulb(pin)) {
+            continue;
+        }
+
         // Add random time offset per pin (0-30ms)
         unsigned long interval = map(speed, 1, 100, 100, 10) + random8(0, 31);
 

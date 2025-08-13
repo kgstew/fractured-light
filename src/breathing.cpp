@@ -64,6 +64,12 @@ void breathingPattern(int pins[], int numPins, int speed, CRGB palette[], int pa
 
         for (int p = 0; p < numPins; p++) {
             int pin = pins[p];
+            
+            // Skip pins that are currently being used by flashbulb
+            if (isPinUsedByFlashbulb(pin)) {
+                continue;
+            }
+            
             int startIndex = pin * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN;
             int endIndex = startIndex + (NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN);
 

@@ -243,11 +243,43 @@ void Program::update()
     updateTransitions();
 
     if (interruptState == INTERRUPT_ACTIVE && interruptSegment != nullptr) {
+        // For flashbulb patterns, also continue running the main pattern on unaffected pins
+        bool isFlashbulb = false;
+        if (interruptSegment->patterns != nullptr && interruptSegment->numPatterns > 0) {
+            isFlashbulb = (interruptSegment->patterns[0]->patternType == PATTERN_FLASHBULB);
+        }
+        
+        if (isFlashbulb && currentSegment < numSegments && segments[currentSegment] != nullptr) {
+            // For flashbulb: run main pattern first, then flashbulb will override its pins
+            segments[currentSegment]->update();
+        }
+        
+        // Update the interrupt pattern (this will override target pins for flashbulb)
         interruptSegment->update();
         
-        if (interruptSegment->isFinished()) {
-            interruptState = INTERRUPT_TRANSITIONING_IN;
-            transitionStartTime = millis();
+        bool shouldFinish = false;
+        if (isFlashbulb) {
+            // For flashbulb, check its internal completion state
+            shouldFinish = isFlashbulbComplete();
+        } else {
+            // For other patterns, use the segment's duration
+            shouldFinish = interruptSegment->isFinished();
+        }
+        
+        if (shouldFinish) {
+            if (isFlashbulb) {
+                // Flashbulb completed, restore immediately
+                if (interruptSegment != nullptr) {
+                    interruptSegment->stop();
+                    delete interruptSegment;
+                    interruptSegment = nullptr;
+                }
+                resumeCurrentSegment();
+                interruptState = INTERRUPT_NONE;
+            } else {
+                interruptState = INTERRUPT_TRANSITIONING_IN;
+                transitionStartTime = millis();
+            }
         }
     } else if (interruptState == INTERRUPT_NONE && currentSegment < numSegments && segments[currentSegment] != nullptr) {
         segments[currentSegment]->update();
@@ -281,8 +313,17 @@ void Program::triggerInterrupt(PatternType type, int* pins, int numPins, unsigne
     }
     
     interruptSegment = new InterruptSegment(type, pins, numPins, durationMs, params);
-    interruptState = INTERRUPT_TRANSITIONING_OUT;
-    transitionStartTime = millis();
+    
+    // Flashbulb handles its own transitions, skip the fade system
+    if (type == PATTERN_FLASHBULB) {
+        interruptState = INTERRUPT_ACTIVE;
+        if (interruptSegment != nullptr) {
+            interruptSegment->start();
+        }
+    } else {
+        interruptState = INTERRUPT_TRANSITIONING_OUT;
+        transitionStartTime = millis();
+    }
 }
 
 void Program::pauseCurrentSegment()
@@ -315,7 +356,6 @@ void Program::updateTransitions()
     switch (interruptState) {
         case INTERRUPT_TRANSITIONING_OUT:
             if (currentTime - transitionStartTime >= transitionDuration) {
-                fadeOut();
                 if (interruptSegment != nullptr) {
                     interruptSegment->start();
                 }
@@ -323,6 +363,7 @@ void Program::updateTransitions()
                 currentBrightness = originalBrightness;
                 FastLED.setBrightness(currentBrightness);
             } else {
+                // During transition out, continue running the current pattern but fade brightness
                 float progress = (float)(currentTime - transitionStartTime) / transitionDuration;
                 currentBrightness = originalBrightness * (1.0 - progress);
                 FastLED.setBrightness(currentBrightness);
@@ -331,7 +372,6 @@ void Program::updateTransitions()
             
         case INTERRUPT_TRANSITIONING_IN:
             if (currentTime - transitionStartTime >= transitionDuration) {
-                fadeIn();
                 if (interruptSegment != nullptr) {
                     interruptSegment->stop();
                     delete interruptSegment;
@@ -342,6 +382,8 @@ void Program::updateTransitions()
                 currentBrightness = originalBrightness;
                 FastLED.setBrightness(currentBrightness);
             } else {
+                // During transition in, the interrupt pattern handles the transition itself
+                // We just restore brightness gradually
                 float progress = (float)(currentTime - transitionStartTime) / transitionDuration;
                 currentBrightness = originalBrightness * progress;
                 FastLED.setBrightness(currentBrightness);
