@@ -33,39 +33,28 @@ void spinPattern(int pins[], int numPins, int speed, int separation, int span, C
             
             if (continuous) {
                 // Continuous mode: fill the entire strip with repeating pattern
-                if (blend) {
-                    // Blended continuous mode: smooth transitions across entire strip
-                    for (int i = 0; i < totalLeds; i++) {
-                        // Calculate position in the pattern cycle
-                        float cyclePos = (float)((i + currentPosition[pin]) % totalLeds) / totalLeds;
-                        
-                        // Scale to palette range and get fractional part for blending
-                        float palettePos = cyclePos * paletteSize;
-                        int colorIndex1 = (int)palettePos % paletteSize;
-                        int colorIndex2 = (colorIndex1 + 1) % paletteSize;
-                        float blendAmount = palettePos - (int)palettePos;
-                        
-                        // Use FastLED's lerp8 for smooth blending
-                        CRGB color = palette[colorIndex1].lerp8(palette[colorIndex2], (uint8_t)(blendAmount * 255));
+                int patternLength = (paletteSize * span) + (paletteSize * separation);
+                
+                for (int i = 0; i < totalLeds; i++) {
+                    int patternPos = (i + currentPosition[pin]) % patternLength;
+                    int colorIndex = patternPos / (span + separation);
+                    int posInColor = patternPos % (span + separation);
+                    
+                    if (posInColor < span) {
+                        CRGB color;
+                        if (blend && span > 1) {
+                            // Blend within each span
+                            float spanProgress = (float)posInColor / (span - 1);
+                            int nextColorIndex = (colorIndex + 1) % paletteSize;
+                            color = palette[colorIndex % paletteSize].lerp8(palette[nextColorIndex], (uint8_t)(spanProgress * 255));
+                        } else {
+                            color = palette[colorIndex % paletteSize];
+                        }
                         
                         int ledPos = reverse ? (totalLeds - 1 - i) : i;
                         leds[startIndex + ledPos] = color;
                     }
-                } else {
-                    // Non-blended continuous mode: discrete color segments
-                    int patternLength = (paletteSize * span) + (paletteSize * separation);
-                    
-                    for (int i = 0; i < totalLeds; i++) {
-                        int patternPos = (i + currentPosition[pin]) % patternLength;
-                        int colorIndex = patternPos / (span + separation);
-                        int posInColor = patternPos % (span + separation);
-                        
-                        if (posInColor < span) {
-                            CRGB color = palette[colorIndex % paletteSize];
-                            int ledPos = reverse ? (totalLeds - 1 - i) : i;
-                            leds[startIndex + ledPos] = color;
-                        }
-                    }
+                    // Separation areas remain black (already cleared above)
                 }
             } else {
                 // Non-continuous mode: show each color once per cycle
