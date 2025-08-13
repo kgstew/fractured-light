@@ -5,7 +5,8 @@
 
 enum PatternType {
     PATTERN_BREATHING,
-    PATTERN_FLAME
+    PATTERN_FLAME,
+    PATTERN_GROW
 };
 
 struct PatternParams {
@@ -19,6 +20,13 @@ struct PatternParams {
             int cooling;
             int sparking;
         } flame;
+        struct {
+            int speed;
+            int n;
+            int fadeDelay;
+            int holdDelay;
+            CRGB color;
+        } grow;
     };
 };
 
