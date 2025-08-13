@@ -134,7 +134,7 @@ void Segment::update()
         case PATTERN_SPIN:
             spinPattern(pattern->pins, pattern->numPins, pattern->params.spin.speed, pattern->params.spin.separation,
                 pattern->params.spin.span, pattern->params.spin.palette, pattern->params.spin.paletteSize, 
-                pattern->params.spin.continuous, pattern->params.spin.blend, pattern->reverse);
+                pattern->params.spin.loop, pattern->params.spin.continuous, pattern->params.spin.blend, pattern->reverse);
             break;
         }
     }

@@ -56,6 +56,7 @@ struct PatternParams {
             int span;
             CRGB* palette;
             int paletteSize;
+            bool loop;
             bool continuous;
             bool blend;
         } spin;

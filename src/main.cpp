@@ -134,7 +134,8 @@ void setup()
     spinParams.spin.span = 15; // Each color fills 15 LEDs
     spinParams.spin.palette = spinPalette;
     spinParams.spin.paletteSize = 4;
-    spinParams.spin.continuous = true; // Fill entire strip with repeating pattern
+    spinParams.spin.loop = true; // Fill entire strip with repeating pattern
+    spinParams.spin.continuous = false; // Use span/separation pattern instead of all LEDs
     spinParams.spin.blend = true; // Smooth color transitions using FastLED lerp8
     mainProgram->addSegment(5, new Segment(PATTERN_SPIN, allPins, 8, 15, spinParams));
 
