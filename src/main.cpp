@@ -68,13 +68,13 @@ void setup()
     static CRGB growPalette[] = { CRGB::Cyan, CRGB::Blue, CRGB::Purple, CRGB::Magenta, CRGB::Red, CRGB::Orange };
     PatternParams growParams;
     growParams.grow.speed = 60;
-    growParams.grow.n = 5;
+    growParams.grow.n = 1;
     growParams.grow.fadeDelay = 100;
     growParams.grow.holdDelay = 2000;
     growParams.grow.palette = growPalette;
     growParams.grow.paletteSize = 6;
     growParams.grow.transitionSpeed = 40;
-    growParams.grow.offsetDelay = 300;
+    growParams.grow.offsetDelay = 1000;
     mainProgram->addSegment(2, new Segment(PATTERN_GROW, allPins, 8, 20, growParams, 1));
 
     // Segment 4: Multi-pattern segment - different patterns on different pins
@@ -96,17 +96,17 @@ void setup()
     multiFlameParams.flame.sparking = 130;
     patterns[1] = new PatternInstance(PATTERN_FLAME, flamePins, 3, multiFlameParams);
 
-    // Chase on pins 6-7
-    int multiChasePins[] = { 6, 7 };
-    static CRGB multiChasePalette[] = { CRGB::Purple, CRGB::Cyan };
-    PatternParams multiChaseParams;
-    multiChaseParams.chase.speed = 60;
-    multiChaseParams.chase.palette = multiChasePalette;
-    multiChaseParams.chase.paletteSize = 2;
-    multiChaseParams.chase.transitionSpeed = 45;
-    multiChaseParams.chase.holdDelay = 800;
-    multiChaseParams.chase.offsetDelay = 1500;
-    patterns[2] = new PatternInstance(PATTERN_CHASE, multiChasePins, 2, multiChaseParams);
+    int growPins[] = { 6, 7 };
+    PatternParams growParams2;
+    growParams2.grow.speed = 60;
+    growParams2.grow.n = 1;
+    growParams2.grow.fadeDelay = 100;
+    growParams2.grow.holdDelay = 2000;
+    growParams2.grow.palette = growPalette;
+    growParams2.grow.paletteSize = 6;
+    growParams2.grow.transitionSpeed = 40;
+    growParams2.grow.offsetDelay = 1000;
+    patterns[2] = new PatternInstance(PATTERN_GROW, growPins, 2, growParams2);
 
     mainProgram->addSegment(3, new Segment(patterns, 3, 25));
 
