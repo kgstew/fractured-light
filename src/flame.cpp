@@ -1,13 +1,13 @@
 #include "patterns.h"
 #include <Arduino.h>
 
+static unsigned long lastUpdate[8] = { 0 };
+static uint8_t heat[8][NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN];
+
 void flamepattern(int pins[], int numPins, int speed, int cooling, int sparking, bool reverse)
 {
     if (speed == 0)
         return;
-
-    static unsigned long lastUpdate[8] = { 0 };
-    static uint8_t heat[8][NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN];
 
     unsigned long currentTime = millis();
 
@@ -57,4 +57,14 @@ void flamepattern(int pins[], int numPins, int speed, int cooling, int sparking,
     }
 
     FastLED.show();
+}
+
+void resetFlamePattern()
+{
+    for (int i = 0; i < 8; i++) {
+        lastUpdate[i] = 0;
+        for (int j = 0; j < NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN; j++) {
+            heat[i][j] = 0;
+        }
+    }
 }

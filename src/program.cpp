@@ -23,6 +23,19 @@ Segment::~Segment() {
 void Segment::start() {
     startTime = millis();
     isActive = true;
+    
+    // Reset pattern state when starting
+    switch (patternType) {
+        case PATTERN_BREATHING:
+            resetBreathingPattern();
+            break;
+        case PATTERN_FLAME:
+            resetFlamePattern();
+            break;
+        case PATTERN_GROW:
+            resetGrowPattern();
+            break;
+    }
 }
 
 void Segment::stop() {

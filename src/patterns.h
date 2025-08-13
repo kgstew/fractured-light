@@ -12,4 +12,8 @@ void breathingPattern(int pins[], int numPins, int speed, CRGB color, bool rever
 void flamepattern(int pins[], int numPins, int speed, int cooling, int sparking, bool reverse = false);
 void growPattern(int pins[], int numPins, int speed, int n, int fadeDelay, int holdDelay, CRGB color, bool reverse = false);
 
+void resetBreathingPattern();
+void resetFlamePattern();
+void resetGrowPattern();
+
 #endif

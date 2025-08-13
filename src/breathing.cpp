@@ -1,14 +1,14 @@
 #include "patterns.h"
 #include <Arduino.h>
 
+static unsigned long lastUpdate = 0;
+static float brightness = 0.0;
+static bool increasing = true;
+
 void breathingPattern(int pins[], int numPins, int speed, CRGB color, bool reverse)
 {
     if (speed == 0)
         return;
-
-    static unsigned long lastUpdate = 0;
-    static float brightness = 0.0;
-    static bool increasing = true;
 
     unsigned long currentTime = millis();
     unsigned long interval = map(speed, 1, 100, 100, 5);
@@ -51,4 +51,11 @@ void breathingPattern(int pins[], int numPins, int speed, CRGB color, bool rever
 
         FastLED.show();
     }
+}
+
+void resetBreathingPattern()
+{
+    lastUpdate = 0;
+    brightness = 0.0;
+    increasing = true;
 }
