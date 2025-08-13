@@ -48,7 +48,7 @@ void setup()
     FastLED.show();
 
     // Create a program with 3 segments
-    mainProgram = new Program(3);
+    mainProgram = new Program(2);
 
     // Segment 1: Purple breathing on all pins for 10 seconds
     int allPins[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
@@ -62,7 +62,7 @@ void setup()
     flameParams.flame.speed = 80;
     flameParams.flame.cooling = 55;
     flameParams.flame.sparking = 120;
-    mainProgram->addSegment(1, new Segment(PATTERN_FLAME, allPins, 8, 65, flameParams, 1));
+    mainProgram->addSegment(1, new Segment(PATTERN_FLAME, allPins, 8, 10, flameParams, 1));
 
     // // Segment 3: Teal breathing on pins 0-3 for 8 seconds
     // int halfPins[] = { 0, 1, 2, 3 };
