@@ -98,6 +98,9 @@ void Segment::start()
         case PATTERN_SPIN:
             resetSpinPattern();
             break;
+        case PATTERN_FLASHBULB:
+            resetFlashbulbPattern();
+            break;
         }
     }
 }
@@ -162,6 +165,10 @@ void Segment::update()
             spinPattern(pattern->pins, pattern->numPins, pattern->params.spin.speed, pattern->params.spin.separation,
                 pattern->params.spin.span, pattern->params.spin.palette, pattern->params.spin.paletteSize, 
                 pattern->params.spin.loop, pattern->params.spin.continuous, pattern->params.spin.blend, pattern->reverse);
+            break;
+        case PATTERN_FLASHBULB:
+            flashbulbPattern(pattern->pins, pattern->numPins, pattern->params.flashbulb.flashDuration,
+                pattern->params.flashbulb.fadeDuration, pattern->params.flashbulb.transitionDuration, pattern->reverse);
             break;
         }
     }

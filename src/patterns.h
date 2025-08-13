@@ -14,12 +14,14 @@ void growPattern(int pins[], int numPins, int speed, int n, int fadeDelay, int h
     int paletteSize, int transitionSpeed, int offsetDelay, bool reverse = false);
 void popPattern(int pins[], int numPins, int speed, int holdDelay, CRGB palette[], int paletteSize, bool random, int accelerationTime, bool reverse = false);
 void spinPattern(int pins[], int numPins, int speed, int separation, int span, CRGB palette[], int paletteSize, bool loop, bool continuous, bool blend, bool reverse = false);
+void flashbulbPattern(int pins[], int numPins, int flashDuration, int fadeDuration, int transitionDuration, bool reverse = false);
 
 void resetBreathingPattern();
 void resetFlamePattern();
 void resetGrowPattern();
 void resetPopPattern();
 void resetSpinPattern();
+void resetFlashbulbPattern();
 
 // Pattern state save/restore functions
 struct PatternState {

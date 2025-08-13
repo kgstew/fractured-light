@@ -294,6 +294,12 @@ void handleInterruptMessage(String message)
             params.pop.palette = interruptPalette;
             params.pop.paletteSize = paletteSize;
             
+        } else if (patternName == "flashbulb") {
+            patternType = PATTERN_FLASHBULB;
+            params.flashbulb.flashDuration = json.hasOwnProperty("flashDuration") ? (int)json["flashDuration"] : 100;
+            params.flashbulb.fadeDuration = json.hasOwnProperty("fadeDuration") ? (int)json["fadeDuration"] : 5000;
+            params.flashbulb.transitionDuration = json.hasOwnProperty("transitionDuration") ? (int)json["transitionDuration"] : 2000;
+            
         } else {
             Serial.println("Unknown pattern type: " + patternName);
             return;
@@ -342,8 +348,9 @@ void setupWiFiAndWebSocket()
         html += "<ul><li>spin (speed, separation, span, loop, continuous, blend, palette)</li>";
         html += "<li>breathing (speed, palette)</li>";
         html += "<li>flame (speed, cooling, sparking)</li>";
-        html += "<li>pop (speed, holdDelay, random, accelerationTime, palette)</li></ul>";
-        html += "<p><strong>Note:</strong> testInterrupts() runs automatically every 5 seconds with random pop patterns</p>";
+        html += "<li>pop (speed, holdDelay, random, accelerationTime, palette)</li>";
+        html += "<li>flashbulb (flashDuration, fadeDuration, transitionDuration)</li></ul>";
+        html += "<p><strong>Note:</strong> testInterrupts() runs automatically every 10 seconds with random flashbulb patterns</p>";
         html += "</body></html>";
         request->send(200, "text/html", html);
     });
@@ -357,14 +364,14 @@ void setupWiFiAndWebSocket()
     Serial.println("Web interface: http://192.168.4.1");
 }
 
-// Test function that triggers random pop pattern interrupts every 5 seconds
+// Test function that triggers random flashbulb pattern interrupts every 10 seconds
 void testInterrupts()
 {
     static unsigned long lastTestTime = 0;
     unsigned long currentTime = millis();
     
-    // Trigger interrupt every 5 seconds
-    if (currentTime - lastTestTime >= 5000) {
+    // Trigger interrupt every 10 seconds
+    if (currentTime - lastTestTime >= 10000) {
         lastTestTime = currentTime;
         
         // Generate random number of pins (1-4)
@@ -382,43 +389,36 @@ void testInterrupts()
             randomPins[i] = pin;
         }
         
-        // Setup pop pattern parameters
-        PatternParams popParams;
-        popParams.pop.speed = random(5, 20); // Random speed 5-20
-        popParams.pop.holdDelay = random(200, 500); // Random hold delay 200-500ms
-        popParams.pop.random = true;
-        popParams.pop.accelerationTime = random(3, 8); // Random acceleration 3-8 seconds
+        // Setup flashbulb pattern parameters
+        PatternParams flashbulbParams;
+        flashbulbParams.flashbulb.flashDuration = random(50, 200); // Random flash duration 50-200ms
+        flashbulbParams.flashbulb.fadeDuration = random(3000, 7000); // Random fade duration 3-7 seconds
+        flashbulbParams.flashbulb.transitionDuration = random(1000, 3000); // Random transition 1-3 seconds
         
-        // Random palette colors
-        static CRGB testPalette[8];
-        testPalette[0] = CRGB::Red;
-        testPalette[1] = CRGB::Orange;
-        testPalette[2] = CRGB::Yellow;
-        testPalette[3] = CRGB::Green;
-        testPalette[4] = CRGB::Blue;
-        testPalette[5] = CRGB::Purple;
-        testPalette[6] = CRGB::Pink;
-        testPalette[7] = CRGB::White;
+        // Calculate total duration for the interrupt
+        unsigned long duration = flashbulbParams.flashbulb.flashDuration + 
+                                flashbulbParams.flashbulb.fadeDuration + 
+                                flashbulbParams.flashbulb.transitionDuration;
         
-        popParams.pop.palette = testPalette;
-        popParams.pop.paletteSize = 8;
-        
-        // Random duration between 2-6 seconds
-        unsigned long duration = random(2000, 6000);
-        
-        Serial.print("Test interrupt: Pop pattern on ");
+        Serial.print("Test interrupt: Flashbulb pattern on ");
         Serial.print(numRandomPins);
         Serial.print(" pins (");
         for (int i = 0; i < numRandomPins; i++) {
             Serial.print(randomPins[i]);
             if (i < numRandomPins - 1) Serial.print(", ");
         }
-        Serial.print(") for ");
+        Serial.print(") - Flash: ");
+        Serial.print(flashbulbParams.flashbulb.flashDuration);
+        Serial.print("ms, Fade: ");
+        Serial.print(flashbulbParams.flashbulb.fadeDuration);
+        Serial.print("ms, Transition: ");
+        Serial.print(flashbulbParams.flashbulb.transitionDuration);
+        Serial.print("ms, Total: ");
         Serial.print(duration);
         Serial.println("ms");
         
         // Trigger the interrupt
-        mainProgram->triggerInterrupt(PATTERN_POP, randomPins, numRandomPins, duration, popParams);
+        mainProgram->triggerInterrupt(PATTERN_FLASHBULB, randomPins, numRandomPins, duration, flashbulbParams);
     }
 }
 

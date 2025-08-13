@@ -77,6 +77,7 @@ Supported interrupt patterns with parameters:
 - **flame**: `speed`, `cooling`, `sparking`
 - **grow**: `speed`, `n`, `fadeDelay`, `holdDelay`, `palette`, `transitionSpeed`
 - **pop**: `speed`, `holdDelay`, `palette`, `random`, `accelerationTime`
+- **flashbulb**: `flashDuration` (100ms), `fadeDuration` (5000ms), `transitionDuration` (2000ms)
 
 ### 8. Testing Commands
 Build and upload:

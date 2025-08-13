@@ -9,7 +9,8 @@ enum PatternType {
     PATTERN_GROW,
     PATTERN_CHASE,
     PATTERN_POP,
-    PATTERN_SPIN
+    PATTERN_SPIN,
+    PATTERN_FLASHBULB
 };
 
 enum InterruptState {
@@ -67,6 +68,11 @@ struct PatternParams {
             bool continuous;
             bool blend;
         } spin;
+        struct {
+            int flashDuration;
+            int fadeDuration;
+            int transitionDuration;
+        } flashbulb;
     };
 };
 
