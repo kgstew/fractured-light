@@ -41,14 +41,6 @@ void flamepattern(int pins[], int numPins, int speed, int cooling, int sparking,
                 heat[pin][y] = qadd8(heat[pin][y], random8(160, 255));
             }
 
-            // Add extra heat to bottom eighth for more yellow
-            int bottomEighth = ledsPerPin / 12;
-            for (int i = 0; i < bottomEighth; i++) {
-                if (random8() < 80) { // 80/255 chance
-                    heat[pin][i] = qadd8(heat[pin][i], random8(30, 80));
-                }
-            }
-
             // Step 4: Map from heat cells to LED colors using HeatColor palette
             for (int j = 0; j < ledsPerPin; j++) {
                 // Scale heat value to palette index

@@ -59,17 +59,17 @@ void setup()
 
     // Segment 2: Flame pattern on all pins for 15 seconds
     PatternParams flameParams;
-    flameParams.flame.speed = 50;
+    flameParams.flame.speed = 80;
     flameParams.flame.cooling = 55;
     flameParams.flame.sparking = 120;
-    mainProgram->addSegment(1, new Segment(PATTERN_FLAME, allPins, 8, 15, flameParams, 0));
+    mainProgram->addSegment(1, new Segment(PATTERN_FLAME, allPins, 8, 65, flameParams, 1));
 
-    // Segment 3: Teal breathing on pins 0-3 for 8 seconds
-    int halfPins[] = { 0, 1, 2, 3 };
-    PatternParams tealParams;
-    tealParams.breathing.speed = 20;
-    tealParams.breathing.color = CRGB(0, 128, 128);
-    mainProgram->addSegment(2, new Segment(PATTERN_BREATHING, halfPins, 4, 8, tealParams));
+    // // Segment 3: Teal breathing on pins 0-3 for 8 seconds
+    // int halfPins[] = { 0, 1, 2, 3 };
+    // PatternParams tealParams;
+    // tealParams.breathing.speed = 20;
+    // tealParams.breathing.color = CRGB(0, 128, 128);
+    // mainProgram->addSegment(2, new Segment(PATTERN_BREATHING, halfPins, 4, 8, tealParams));
 
     mainProgram->start();
 }
