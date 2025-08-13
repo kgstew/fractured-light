@@ -12,6 +12,13 @@ enum PatternType {
     PATTERN_SPIN
 };
 
+enum InterruptState {
+    INTERRUPT_NONE,
+    INTERRUPT_TRANSITIONING_OUT,
+    INTERRUPT_ACTIVE,
+    INTERRUPT_TRANSITIONING_IN
+};
+
 struct PatternParams {
     union {
         struct {
@@ -75,7 +82,7 @@ struct PatternInstance {
 };
 
 class Segment {
-private:
+protected:
     PatternInstance** patterns;
     int numPatterns;
     unsigned long duration;
@@ -88,9 +95,33 @@ public:
     ~Segment();
     void start();
     void stop();
-    bool isFinished();
+    virtual bool isFinished();
     void update();
     void addPattern(PatternInstance* pattern);
+    
+    friend class Program;
+};
+
+// Forward declaration
+struct PatternState;
+
+struct SavedSegmentState {
+    int segmentIndex;
+    unsigned long remainingDuration;
+    unsigned long pauseStartTime;
+    PatternState* patternState;
+};
+
+class InterruptSegment : public Segment {
+private:
+    unsigned long interruptDuration;
+    unsigned long interruptStartTime;
+
+public:
+    InterruptSegment(PatternType type, int* pinArray, int pinCount, unsigned long durationMs, PatternParams parameters, bool reverseDirection = false);
+    InterruptSegment(PatternInstance** patternArray, int patternCount, unsigned long durationMs);
+    bool isFinished() override;
+    void start() override;
 };
 
 class Program {
@@ -99,6 +130,14 @@ private:
     int numSegments;
     int currentSegment;
     bool isRunning;
+    
+    InterruptState interruptState;
+    InterruptSegment* interruptSegment;
+    SavedSegmentState savedState;
+    unsigned long transitionStartTime;
+    unsigned long transitionDuration;
+    uint8_t originalBrightness;
+    uint8_t currentBrightness;
 
 public:
     Program(int segmentCount);
@@ -108,6 +147,13 @@ public:
     void stop();
     void update();
     bool getIsRunning();
+    
+    void triggerInterrupt(PatternType type, int* pins, int numPins, unsigned long durationMs, PatternParams params);
+    void pauseCurrentSegment();
+    void resumeCurrentSegment();
+    void updateTransitions();
+    void fadeOut();
+    void fadeIn();
 };
 
 #endif

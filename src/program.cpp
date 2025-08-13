@@ -17,6 +17,33 @@ PatternInstance::PatternInstance(
 
 PatternInstance::~PatternInstance() { delete[] pins; }
 
+InterruptSegment::InterruptSegment(PatternType type, int* pinArray, int pinCount, unsigned long durationMs, PatternParams parameters, bool reverseDirection)
+    : Segment(type, pinArray, pinCount, 0, parameters, reverseDirection)
+{
+    interruptDuration = durationMs;
+    interruptStartTime = 0;
+}
+
+InterruptSegment::InterruptSegment(PatternInstance** patternArray, int patternCount, unsigned long durationMs)
+    : Segment(patternArray, patternCount, 0)
+{
+    interruptDuration = durationMs;
+    interruptStartTime = 0;
+}
+
+bool InterruptSegment::isFinished()
+{
+    if (!isActive)
+        return false;
+    return (millis() - interruptStartTime) >= interruptDuration;
+}
+
+void InterruptSegment::start()
+{
+    Segment::start();
+    interruptStartTime = millis();
+}
+
 Segment::Segment(PatternType type, int* pinArray, int pinCount, unsigned long durationSeconds, PatternParams parameters,
     bool reverseDirection)
 {
@@ -152,6 +179,12 @@ Program::Program(int segmentCount)
     numSegments = segmentCount;
     currentSegment = 0;
     isRunning = false;
+    
+    interruptState = INTERRUPT_NONE;
+    interruptSegment = nullptr;
+    transitionDuration = 500;
+    originalBrightness = 255;
+    currentBrightness = 255;
 
     for (int i = 0; i < numSegments; i++) {
         segments[i] = nullptr;
@@ -164,6 +197,10 @@ Program::~Program()
         delete segments[i];
     }
     delete[] segments;
+    
+    if (interruptSegment != nullptr) {
+        delete interruptSegment;
+    }
 }
 
 void Program::addSegment(int index, Segment* segment)
@@ -192,23 +229,131 @@ void Program::stop()
 
 void Program::update()
 {
-    if (!isRunning || currentSegment >= numSegments || segments[currentSegment] == nullptr) {
+    if (!isRunning) {
         return;
     }
 
-    segments[currentSegment]->update();
+    updateTransitions();
 
-    if (segments[currentSegment]->isFinished()) {
-        segments[currentSegment]->stop();
-        currentSegment++;
+    if (interruptState == INTERRUPT_ACTIVE && interruptSegment != nullptr) {
+        interruptSegment->update();
+        
+        if (interruptSegment->isFinished()) {
+            interruptState = INTERRUPT_TRANSITIONING_IN;
+            transitionStartTime = millis();
+        }
+    } else if (interruptState == INTERRUPT_NONE && currentSegment < numSegments && segments[currentSegment] != nullptr) {
+        segments[currentSegment]->update();
 
-        if (currentSegment >= numSegments) {
-            currentSegment = 0;
-            segments[currentSegment]->start();
-        } else {
-            segments[currentSegment]->start();
+        if (segments[currentSegment]->isFinished()) {
+            segments[currentSegment]->stop();
+            currentSegment++;
+
+            if (currentSegment >= numSegments) {
+                currentSegment = 0;
+                segments[currentSegment]->start();
+            } else {
+                segments[currentSegment]->start();
+            }
         }
     }
 }
 
 bool Program::getIsRunning() { return isRunning; }
+
+void Program::triggerInterrupt(PatternType type, int* pins, int numPins, unsigned long durationMs, PatternParams params)
+{
+    if (interruptState != INTERRUPT_NONE) {
+        return;
+    }
+
+    pauseCurrentSegment();
+    
+    if (interruptSegment != nullptr) {
+        delete interruptSegment;
+    }
+    
+    interruptSegment = new InterruptSegment(type, pins, numPins, durationMs, params);
+    interruptState = INTERRUPT_TRANSITIONING_OUT;
+    transitionStartTime = millis();
+}
+
+void Program::pauseCurrentSegment()
+{
+    if (currentSegment < numSegments && segments[currentSegment] != nullptr) {
+        savedState.segmentIndex = currentSegment;
+        savedState.pauseStartTime = millis();
+        
+        unsigned long elapsedTime = millis() - segments[currentSegment]->startTime;
+        savedState.remainingDuration = segments[currentSegment]->duration - elapsedTime;
+    }
+}
+
+void Program::resumeCurrentSegment()
+{
+    if (savedState.segmentIndex < numSegments && segments[savedState.segmentIndex] != nullptr) {
+        currentSegment = savedState.segmentIndex;
+        
+        unsigned long pauseDuration = millis() - savedState.pauseStartTime;
+        segments[currentSegment]->startTime = millis() - (segments[currentSegment]->duration - savedState.remainingDuration);
+        
+        segments[currentSegment]->isActive = true;
+    }
+}
+
+void Program::updateTransitions()
+{
+    unsigned long currentTime = millis();
+    
+    switch (interruptState) {
+        case INTERRUPT_TRANSITIONING_OUT:
+            if (currentTime - transitionStartTime >= transitionDuration) {
+                fadeOut();
+                if (interruptSegment != nullptr) {
+                    interruptSegment->start();
+                }
+                interruptState = INTERRUPT_ACTIVE;
+                currentBrightness = originalBrightness;
+                FastLED.setBrightness(currentBrightness);
+            } else {
+                float progress = (float)(currentTime - transitionStartTime) / transitionDuration;
+                currentBrightness = originalBrightness * (1.0 - progress);
+                FastLED.setBrightness(currentBrightness);
+            }
+            break;
+            
+        case INTERRUPT_TRANSITIONING_IN:
+            if (currentTime - transitionStartTime >= transitionDuration) {
+                fadeIn();
+                if (interruptSegment != nullptr) {
+                    interruptSegment->stop();
+                    delete interruptSegment;
+                    interruptSegment = nullptr;
+                }
+                resumeCurrentSegment();
+                interruptState = INTERRUPT_NONE;
+                currentBrightness = originalBrightness;
+                FastLED.setBrightness(currentBrightness);
+            } else {
+                float progress = (float)(currentTime - transitionStartTime) / transitionDuration;
+                currentBrightness = originalBrightness * progress;
+                FastLED.setBrightness(currentBrightness);
+            }
+            break;
+            
+        default:
+            break;
+    }
+}
+
+void Program::fadeOut()
+{
+    FastLED.setBrightness(0);
+    FastLED.show();
+}
+
+void Program::fadeIn()
+{
+    FastLED.setBrightness(originalBrightness);
+    FastLED.show();
+}

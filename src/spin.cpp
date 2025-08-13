@@ -2,8 +2,8 @@
 #include <Arduino.h>
 #include <FastLED.h>
 
-static unsigned long lastUpdateTime = 0;
-static int currentPosition[8] = { 0 };
+unsigned long lastUpdateTime = 0;
+int currentPosition[8] = { 0 };
 
 void resetSpinPattern() {
     lastUpdateTime = 0;

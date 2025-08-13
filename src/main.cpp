@@ -1,7 +1,12 @@
 #include "patterns.h"
 #include "program.h"
 #include <Arduino.h>
+#include <Arduino_JSON.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
 #include <FastLED.h>
+#include <WebSocketsServer.h>
+#include <WiFi.h>
 
 #define NUM_LEDS_PER_STRIP 122
 #define NUM_STRIPS_PER_PIN 2
@@ -20,6 +25,19 @@
 
 CRGB leds[TOTAL_LEDS];
 Program* mainProgram;
+
+// WiFi and WebSocket configuration
+const char* ssid = "FracturedLight";
+const char* password = "lightshow2024";
+
+AsyncWebServer server(80);
+WebSocketsServer webSocket = WebSocketsServer(81);
+
+// Function declarations
+void setupWiFiAndWebSocket();
+void webSocketEvent(uint8_t num, WStype_t type, uint8_t* payload, size_t length);
+void handleInterruptMessage(String message);
+CRGB parseColor(String colorStr);
 
 void setup()
 {
@@ -140,6 +158,176 @@ void setup()
     mainProgram->addSegment(5, new Segment(PATTERN_POP, allPins, 8, 20, popParams));
 
     mainProgram->start();
+    
+    // Setup WiFi and WebSocket
+    setupWiFiAndWebSocket();
 }
 
-void loop() { mainProgram->update(); }
+// WebSocket event handler
+void webSocketEvent(uint8_t num, WStype_t type, uint8_t* payload, size_t length)
+{
+    switch (type) {
+    case WStype_DISCONNECTED:
+        Serial.printf("[%u] Disconnected!\n", num);
+        break;
+
+    case WStype_CONNECTED: {
+        IPAddress ip = webSocket.remoteIP(num);
+        Serial.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
+    } break;
+
+    case WStype_TEXT:
+        Serial.printf("[%u] Received: %s\n", num, payload);
+        handleInterruptMessage((char*)payload);
+        break;
+
+    default:
+        break;
+    }
+}
+
+// Handle incoming interrupt messages
+void handleInterruptMessage(String message)
+{
+    JSONVar json = JSON.parse(message);
+
+    if (JSON.typeof(json) == "undefined") {
+        Serial.println("Failed to parse JSON");
+        return;
+    }
+
+    if (json.hasOwnProperty("type") && String((const char*)json["type"]) == "interrupt") {
+        String patternName = String((const char*)json["pattern"]);
+        unsigned long duration = (unsigned long)json["duration"];
+        
+        PatternType patternType;
+        PatternParams params;
+        
+        // Parse pattern type
+        if (patternName == "spin") {
+            patternType = PATTERN_SPIN;
+            params.spin.speed = json.hasOwnProperty("speed") ? (int)json["speed"] : 75;
+            params.spin.separation = json.hasOwnProperty("separation") ? (int)json["separation"] : 20;
+            params.spin.span = json.hasOwnProperty("span") ? (int)json["span"] : 15;
+            params.spin.loop = json.hasOwnProperty("loop") ? (bool)json["loop"] : true;
+            params.spin.continuous = json.hasOwnProperty("continuous") ? (bool)json["continuous"] : true;
+            params.spin.blend = json.hasOwnProperty("blend") ? (bool)json["blend"] : true;
+            
+            // Parse palette
+            static CRGB interruptPalette[8];
+            int paletteSize = 4;
+            if (json.hasOwnProperty("palette")) {
+                JSONVar palette = json["palette"];
+                paletteSize = 0;
+                for (int i = 0; i < 8 && palette.hasOwnProperty(String(i)); i++) {
+                    interruptPalette[i] = parseColor(String((const char*)palette[String(i)]));
+                    paletteSize++;
+                }
+            } else {
+                // Default palette
+                interruptPalette[0] = CRGB::Red;
+                interruptPalette[1] = CRGB::Blue; 
+                interruptPalette[2] = CRGB::Green;
+                interruptPalette[3] = CRGB::Yellow;
+            }
+            params.spin.palette = interruptPalette;
+            params.spin.paletteSize = paletteSize;
+            
+        } else if (patternName == "breathing") {
+            patternType = PATTERN_BREATHING;
+            params.breathing.speed = json.hasOwnProperty("speed") ? (int)json["speed"] : 50;
+            
+            // Parse palette
+            static CRGB interruptPalette[8];
+            int paletteSize = 3;
+            if (json.hasOwnProperty("palette")) {
+                JSONVar palette = json["palette"];
+                paletteSize = 0;
+                for (int i = 0; i < 8 && palette.hasOwnProperty(String(i)); i++) {
+                    interruptPalette[i] = parseColor(String((const char*)palette[String(i)]));
+                    paletteSize++;
+                }
+            } else {
+                // Default palette
+                interruptPalette[0] = CRGB::Purple;
+                interruptPalette[1] = CRGB::Magenta;
+                interruptPalette[2] = CRGB::Blue;
+            }
+            params.breathing.palette = interruptPalette;
+            params.breathing.paletteSize = paletteSize;
+            
+        } else if (patternName == "flame") {
+            patternType = PATTERN_FLAME;
+            params.flame.speed = json.hasOwnProperty("speed") ? (int)json["speed"] : 80;
+            params.flame.cooling = json.hasOwnProperty("cooling") ? (int)json["cooling"] : 55;
+            params.flame.sparking = json.hasOwnProperty("sparking") ? (int)json["sparking"] : 120;
+            
+        } else {
+            Serial.println("Unknown pattern type: " + patternName);
+            return;
+        }
+        
+        // Use all pins for interrupt
+        int allPins[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+        
+        Serial.printf("Triggering %s interrupt for %lums\n", patternName.c_str(), duration);
+        mainProgram->triggerInterrupt(patternType, allPins, 8, duration, params);
+    }
+}
+
+// Parse color string (hex format like "#FF0000")
+CRGB parseColor(String colorStr)
+{
+    if (colorStr.startsWith("#") && colorStr.length() == 7) {
+        long color = strtol(colorStr.c_str() + 1, NULL, 16);
+        return CRGB((color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF);
+    }
+    return CRGB::White; // Default fallback
+}
+
+// Setup WiFi Access Point and WebSocket server
+void setupWiFiAndWebSocket()
+{
+    // Set up WiFi Access Point
+    WiFi.softAP(ssid, password);
+    IPAddress IP = WiFi.softAPIP();
+    Serial.print("AP IP address: ");
+    Serial.println(IP);
+
+    // Setup WebSocket server
+    webSocket.begin();
+    webSocket.onEvent(webSocketEvent);
+    Serial.println("WebSocket server started on port 81");
+
+    // Setup basic web server
+    server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
+        String html = "<!DOCTYPE html><html><head><title>Fractured Light</title></head><body>";
+        html += "<h1>Fractured Light - LED Pattern Interrupts</h1>";
+        html += "<p>WebSocket server running on port 81</p>";
+        html += "<h2>Send JSON messages with format:</h2>";
+        html += "<pre>{\"type\":\"interrupt\",\"pattern\":\"spin\",\"duration\":5000,\"speed\":75}</pre>";
+        html += "<h2>Supported patterns:</h2>";
+        html += "<ul><li>spin (speed, separation, span, loop, continuous, blend, palette)</li>";
+        html += "<li>breathing (speed, palette)</li>";
+        html += "<li>flame (speed, cooling, sparking)</li></ul>";
+        html += "</body></html>";
+        request->send(200, "text/html", html);
+    });
+
+    server.begin();
+    Serial.println("HTTP server started on port 80");
+    Serial.println("=== WiFi Setup Complete ===");
+    Serial.println("Connect to WiFi: FracturedLight");
+    Serial.println("Password: lightshow2024");
+    Serial.println("WebSocket: ws://192.168.4.1:81");
+    Serial.println("Web interface: http://192.168.4.1");
+}
+
+void loop() 
+{
+    // Handle WebSocket events
+    webSocket.loop();
+    
+    // Update main program (patterns and interrupts)
+    mainProgram->update();
+}

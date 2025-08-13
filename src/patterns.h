@@ -21,4 +21,25 @@ void resetGrowPattern();
 void resetPopPattern();
 void resetSpinPattern();
 
+// Pattern state save/restore functions
+struct PatternState {
+    // Breathing state
+    struct {
+        unsigned long lastUpdateTime;
+        int currentBrightness;
+        bool increasing;
+    } breathing;
+    
+    // Spin state 
+    struct {
+        unsigned long lastUpdateTime;
+        int currentPosition[8];
+    } spin;
+    
+    // Add other pattern states as needed
+};
+
+void savePatternStates(PatternState* state);
+void restorePatternStates(PatternState* state);
+
 #endif

@@ -1,11 +1,11 @@
 #include "patterns.h"
 #include <Arduino.h>
 
-static unsigned long lastUpdate = 0;
-static float brightness = 0.0;
-static bool increasing = true;
-static unsigned long colorTransitionTime = 0;
-static float colorProgress = 0.0;
+unsigned long lastUpdate = 0;
+float brightness = 0.0;
+bool increasing = true;
+unsigned long colorTransitionTime = 0;
+float colorProgress = 0.0;
 
 void breathingPattern(int pins[], int numPins, int speed, CRGB palette[], int paletteSize, bool reverse)
 {
