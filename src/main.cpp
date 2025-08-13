@@ -71,7 +71,7 @@ void setup()
     growParams.grow.fadeDelay = 100;
     growParams.grow.holdDelay = 2000;
     growParams.grow.color = CRGB(0, 255, 128);
-    mainProgram->addSegment(2, new Segment(PATTERN_GROW, allPins, 8, 12, growParams));
+    mainProgram->addSegment(2, new Segment(PATTERN_GROW, allPins, 8, 12, growParams, 1));
 
     mainProgram->start();
 }
