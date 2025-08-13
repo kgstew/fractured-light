@@ -47,15 +47,15 @@ void setup()
     FastLED.clear();
     FastLED.show();
 
-    // Create a program with 4 segments
-    mainProgram = new Program(4);
+    // Create a program with 5 segments
+    mainProgram = new Program(5);
 
     // Segment 1: Purple breathing on all pins for 10 seconds
     int allPins[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
     PatternParams breathingParams;
     breathingParams.breathing.speed = 50;
     breathingParams.breathing.color = CRGB(128, 0, 128);
-    mainProgram->addSegment(0, new Segment(PATTERN_BREATHING, allPins, 8, 15, breathingParams));
+    mainProgram->addSegment(0, new Segment(PATTERN_BREATHING, allPins, 8, 10, breathingParams));
 
     // Segment 2: Flame pattern on all pins for 15 seconds
     PatternParams flameParams;
@@ -75,7 +75,7 @@ void setup()
     growParams.grow.paletteSize = 6;
     growParams.grow.transitionSpeed = 40;
     growParams.grow.offsetDelay = 1000;
-    mainProgram->addSegment(2, new Segment(PATTERN_GROW, allPins, 8, 20, growParams, 1));
+    mainProgram->addSegment(2, new Segment(PATTERN_GROW, allPins, 8, 10, growParams, 1));
 
     // Segment 4: Multi-pattern segment - different patterns on different pins
     // Create pattern instances for different pin groups
@@ -108,7 +108,17 @@ void setup()
     growParams2.grow.offsetDelay = 1000;
     patterns[2] = new PatternInstance(PATTERN_GROW, growPins, 2, growParams2);
 
-    mainProgram->addSegment(3, new Segment(patterns, 3, 25));
+    mainProgram->addSegment(3, new Segment(patterns, 3, 5));
+
+    // Segment 5: Pop pattern on all pins for 20 seconds
+    static CRGB popPalette[]
+        = { CRGB::Red, CRGB::Orange, CRGB::Yellow, CRGB::Green, CRGB::Blue, CRGB::Purple, CRGB::Pink, CRGB::White };
+    PatternParams popParams;
+    popParams.pop.speed = 70;
+    popParams.pop.holdDelay = 500; // Hold each color for 1.5 seconds
+    popParams.pop.palette = popPalette;
+    popParams.pop.paletteSize = 8;
+    mainProgram->addSegment(4, new Segment(PATTERN_POP, allPins, 8, 20, popParams));
 
     mainProgram->start();
 }

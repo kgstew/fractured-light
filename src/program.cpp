@@ -65,6 +65,9 @@ void Segment::start()
         case PATTERN_GROW:
             resetGrowPattern();
             break;
+        case PATTERN_POP:
+            resetPopPattern();
+            break;
         }
     }
 }
@@ -119,6 +122,10 @@ void Segment::update()
                 pattern->params.grow.fadeDelay, pattern->params.grow.holdDelay, pattern->params.grow.palette,
                 pattern->params.grow.paletteSize, pattern->params.grow.transitionSpeed,
                 pattern->params.grow.offsetDelay, pattern->reverse);
+            break;
+        case PATTERN_POP:
+            popPattern(pattern->pins, pattern->numPins, pattern->params.pop.speed, pattern->params.pop.holdDelay,
+                pattern->params.pop.palette, pattern->params.pop.paletteSize, pattern->reverse);
             break;
         }
     }

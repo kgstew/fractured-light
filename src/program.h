@@ -7,7 +7,8 @@ enum PatternType {
     PATTERN_BREATHING,
     PATTERN_FLAME,
     PATTERN_GROW,
-    PATTERN_CHASE
+    PATTERN_CHASE,
+    PATTERN_POP
 };
 
 struct PatternParams {
@@ -39,6 +40,12 @@ struct PatternParams {
             int holdDelay;
             int offsetDelay;
         } chase;
+        struct {
+            int speed;
+            int holdDelay;
+            CRGB* palette;
+            int paletteSize;
+        } pop;
     };
 };
 
