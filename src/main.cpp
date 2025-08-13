@@ -47,8 +47,8 @@ void setup()
     FastLED.clear();
     FastLED.show();
 
-    // Create a program with 3 segments
-    mainProgram = new Program(3);
+    // Create a program with 4 segments
+    mainProgram = new Program(4);
 
     // Segment 1: Purple breathing on all pins for 10 seconds
     int allPins[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
@@ -72,6 +72,16 @@ void setup()
     growParams.grow.holdDelay = 2000;
     growParams.grow.color = CRGB(0, 255, 128);
     mainProgram->addSegment(2, new Segment(PATTERN_GROW, allPins, 8, 12, growParams, 1));
+
+    // Segment 4: Chase pattern on all pins for 10 seconds
+    static CRGB chasePalette[] = { CRGB::Red, CRGB::Orange, CRGB::Yellow, CRGB::Green, CRGB::Blue, CRGB::Purple };
+    PatternParams chaseParams;
+    chaseParams.chase.speed = 75;
+    chaseParams.chase.palette = chasePalette;
+    chaseParams.chase.paletteSize = 6;
+    chaseParams.chase.transitionSpeed = 50;
+    chaseParams.chase.holdDelay = 1000;
+    mainProgram->addSegment(3, new Segment(PATTERN_CHASE, allPins, 8, 10, chaseParams));
 
     mainProgram->start();
 }
