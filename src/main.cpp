@@ -47,8 +47,8 @@ void setup()
     FastLED.clear();
     FastLED.show();
 
-    // Create a program with 5 segments
-    mainProgram = new Program(5);
+    // Create a program with 6 segments
+    mainProgram = new Program(6);
 
     // Segment 1: Purple breathing on all pins for 10 seconds
     int allPins[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
@@ -122,19 +122,19 @@ void setup()
     popParams.pop.accelerationTime = 8; // Accelerate over 8 seconds
     mainProgram->addSegment(4, new Segment(PATTERN_POP, allPins, 8, 20, popParams));
 
+    // Segment 6: Spin pattern test on all pins for 15 seconds
+    static CRGB spinPalette[] = { CRGB::Red, CRGB::Blue, CRGB::Green, CRGB::Yellow };
+    PatternParams spinParams;
+    spinParams.spin.speed = 75; // Medium-fast speed
+    spinParams.spin.separation = 20; // 20 LEDs of black space between colors
+    spinParams.spin.span = 15; // Each color fills 15 LEDs
+    spinParams.spin.palette = spinPalette;
+    spinParams.spin.paletteSize = 4;
+    spinParams.spin.continuous = true; // Fill entire strip with repeating pattern
+    spinParams.spin.blend = true; // Smooth color transitions using FastLED lerp8
+    mainProgram->addSegment(5, new Segment(PATTERN_SPIN, allPins, 8, 15, spinParams));
+
     mainProgram->start();
 }
 
 void loop() { mainProgram->update(); }
-
-/**
- *
- * Pulsing different colors slowly in a breathing pattern.
- *
- * Purple and greens and teals
- * Fire effect
- *
- * Spirals around the column like a tornado
- * All 8 in sync and then breaking apart
- *
- */

@@ -8,7 +8,8 @@ enum PatternType {
     PATTERN_FLAME,
     PATTERN_GROW,
     PATTERN_CHASE,
-    PATTERN_POP
+    PATTERN_POP,
+    PATTERN_SPIN
 };
 
 struct PatternParams {
@@ -48,6 +49,15 @@ struct PatternParams {
             bool random;
             int accelerationTime;
         } pop;
+        struct {
+            int speed;
+            int separation;
+            int span;
+            CRGB* palette;
+            int paletteSize;
+            bool continuous;
+            bool blend;
+        } spin;
     };
 };
 

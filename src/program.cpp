@@ -68,6 +68,9 @@ void Segment::start()
         case PATTERN_POP:
             resetPopPattern();
             break;
+        case PATTERN_SPIN:
+            resetSpinPattern();
+            break;
         }
     }
 }
@@ -127,6 +130,11 @@ void Segment::update()
             popPattern(pattern->pins, pattern->numPins, pattern->params.pop.speed, pattern->params.pop.holdDelay,
                 pattern->params.pop.palette, pattern->params.pop.paletteSize, pattern->params.pop.random, 
                 pattern->params.pop.accelerationTime, pattern->reverse);
+            break;
+        case PATTERN_SPIN:
+            spinPattern(pattern->pins, pattern->numPins, pattern->params.spin.speed, pattern->params.spin.separation,
+                pattern->params.spin.span, pattern->params.spin.palette, pattern->params.spin.paletteSize, 
+                pattern->params.spin.continuous, pattern->params.spin.blend, pattern->reverse);
             break;
         }
     }
