@@ -1,12 +1,18 @@
 #include "patterns.h"
 #include "program.h"
 #include <Arduino.h>
+#include <FastLED.h>
+
+// Enable this to turn on WiFi and websocket interrupts
+#define USE_INTERRUPTS
+
+#ifdef USE_INTERRUPTS
 #include <Arduino_JSON.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include <FastLED.h>
 #include <WebSocketsServer.h>
 #include <WiFi.h>
+#endif
 
 #define NUM_LEDS_PER_STRIP 122
 #define NUM_STRIPS_PER_PIN 2
@@ -26,9 +32,10 @@
 CRGB leds[TOTAL_LEDS];
 Program* mainProgram;
 
+#ifdef USE_INTERRUPTS
 // WiFi and WebSocket configuration
-const char* ssid = "FracturedLight";
-const char* password = "lightshow2024";
+const char* ssid = "StreetLighting";
+const char* password = "lightitup";
 
 AsyncWebServer server(80);
 WebSocketsServer webSocket = WebSocketsServer(81);
@@ -38,21 +45,21 @@ WebSocketsServer webSocket = WebSocketsServer(81);
 
 struct SensorMapping {
     uint8_t sensor_id;
-    uint8_t led_pins[4];  // Up to 4 pins per sensor
+    uint8_t led_pins[4]; // Up to 4 pins per sensor
     uint8_t num_pins;
     bool active;
     unsigned long last_trigger_time;
 };
 
 SensorMapping sensor_mappings[MAX_SENSORS] = {
-    { 1, { 0 }, 1, true, 0 },        // Sensor 1 -> Pin 0
-    { 2, { 1 }, 1, true, 0 },        // Sensor 2 -> Pin 1  
-    { 3, { 2 }, 1, true, 0 },        // Sensor 3 -> Pin 2
-    { 4, { 3, 4 }, 2, true, 0 },     // Sensor 4 -> Pins 3,4
-    { 5, { 5, 6 }, 2, true, 0 },     // Sensor 5 -> Pins 5,6
-    { 6, { 7 }, 1, true, 0 },        // Sensor 6 -> Pin 7
-    { 7, { 0, 1, 2, 3 }, 4, false, 0 },  // Sensor 7 -> Pins 0-3 (disabled)
-    { 8, { 4, 5, 6, 7 }, 4, false, 0 },  // Sensor 8 -> Pins 4-7 (disabled)
+    { 1, { 0 }, 1, true, 0 }, // Sensor 1 -> Pin 0
+    { 2, { 1 }, 1, true, 0 }, // Sensor 2 -> Pin 1
+    { 3, { 2 }, 1, true, 0 }, // Sensor 3 -> Pin 2
+    { 4, { 3, 4 }, 2, true, 0 }, // Sensor 4 -> Pins 3,4
+    { 5, { 5, 6 }, 2, true, 0 }, // Sensor 5 -> Pins 5,6
+    { 6, { 7 }, 1, true, 0 }, // Sensor 6 -> Pin 7
+    { 7, { 0, 1, 2, 3 }, 4, false, 0 }, // Sensor 7 -> Pins 0-3 (disabled)
+    { 8, { 4, 5, 6, 7 }, 4, false, 0 }, // Sensor 8 -> Pins 4-7 (disabled)
 };
 
 // Function declarations
@@ -60,6 +67,7 @@ void setupWiFiAndWebSocket();
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t* payload, size_t length);
 void handleSensorMessage(String message);
 void testInterrupts();
+#endif
 
 void setup()
 {
@@ -180,11 +188,14 @@ void setup()
     mainProgram->addSegment(5, new Segment(PATTERN_POP, allPins, 8, 20, popParams));
 
     mainProgram->start();
-    
+
+#ifdef USE_INTERRUPTS
     // Setup WiFi and WebSocket
     setupWiFiAndWebSocket();
+#endif
 }
 
+#ifdef USE_INTERRUPTS
 // WebSocket event handler
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t* payload, size_t length)
 {
@@ -240,14 +251,13 @@ void handleSensorMessage(String message)
 
                     // Setup flashbulb pattern parameters
                     PatternParams flashbulbParams;
-                    flashbulbParams.flashbulb.flashDuration = 100;    // 100ms flash
-                    flashbulbParams.flashbulb.fadeDuration = 5000;    // 5 second fade
+                    flashbulbParams.flashbulb.flashDuration = 100; // 100ms flash
+                    flashbulbParams.flashbulb.fadeDuration = 5000; // 5 second fade
                     flashbulbParams.flashbulb.transitionDuration = 2000; // 2 second transition back
-                    
+
                     // Calculate total duration
-                    unsigned long duration = flashbulbParams.flashbulb.flashDuration + 
-                                           flashbulbParams.flashbulb.fadeDuration + 
-                                           flashbulbParams.flashbulb.transitionDuration;
+                    unsigned long duration = flashbulbParams.flashbulb.flashDuration
+                        + flashbulbParams.flashbulb.fadeDuration + flashbulbParams.flashbulb.transitionDuration;
 
                     // Convert sensor pins to int array
                     int sensorPins[4];
@@ -266,7 +276,8 @@ void handleSensorMessage(String message)
                     Serial.println();
 
                     // Trigger the flashbulb interrupt
-                    mainProgram->triggerInterrupt(PATTERN_FLASHBULB, sensorPins, sensor_mappings[i].num_pins, duration, flashbulbParams);
+                    mainProgram->triggerInterrupt(
+                        PATTERN_FLASHBULB, sensorPins, sensor_mappings[i].num_pins, duration, flashbulbParams);
                 } else {
                     // Too soon since last trigger
                     unsigned long wait_time = 10000 - time_since_last;
@@ -282,7 +293,6 @@ void handleSensorMessage(String message)
         }
     }
 }
-
 
 // Setup WiFi Access Point and WebSocket server
 void setupWiFiAndWebSocket()
@@ -306,7 +316,7 @@ void setupWiFiAndWebSocket()
         html += "<h2>Send JSON messages with format:</h2>";
         html += "<pre>{\"sensorId\": 1, \"timestamp\": 1234567890}</pre>";
         html += "<h2>Sensor Mappings:</h2><ul>";
-        
+
         for (uint8_t i = 0; i < MAX_SENSORS; i++) {
             if (sensor_mappings[i].active) {
                 html += "<li>Sensor " + String(sensor_mappings[i].sensor_id) + " -> Pins: ";
@@ -318,7 +328,7 @@ void setupWiFiAndWebSocket()
                 html += " (Flashbulb)</li>";
             }
         }
-        
+
         html += "</ul>";
         html += "<p><strong>Note:</strong> Each sensor has a 10-second cooldown period</p>";
         html += "<p><strong>Test:</strong> Random flashbulb patterns trigger every 10 seconds</p>";
@@ -334,23 +344,25 @@ void setupWiFiAndWebSocket()
     Serial.println("WebSocket: ws://192.168.4.1:81");
     Serial.println("Web interface: http://192.168.4.1");
 }
+#endif
 
+#ifdef USE_INTERRUPTS
 // Test function that triggers random flashbulb pattern interrupts every 10 seconds
 void testInterrupts()
 {
     static unsigned long lastTestTime = 0;
     unsigned long currentTime = millis();
-    
+
     // Trigger interrupt every 10 seconds
     if (currentTime - lastTestTime >= 10000) {
         lastTestTime = currentTime;
-        
+
         // Generate random number of pins (1-4)
         int numRandomPins = random(1, 5);
         int randomPins[4];
-        
+
         // Select random pins without duplicates
-        bool usedPins[8] = {false};
+        bool usedPins[8] = { false };
         for (int i = 0; i < numRandomPins; i++) {
             int pin;
             do {
@@ -359,24 +371,24 @@ void testInterrupts()
             usedPins[pin] = true;
             randomPins[i] = pin;
         }
-        
+
         // Setup flashbulb pattern parameters
         PatternParams flashbulbParams;
         flashbulbParams.flashbulb.flashDuration = random(50, 200); // Random flash duration 50-200ms
         flashbulbParams.flashbulb.fadeDuration = random(3000, 7000); // Random fade duration 3-7 seconds
         flashbulbParams.flashbulb.transitionDuration = random(1000, 3000); // Random transition 1-3 seconds
-        
+
         // Calculate total duration for the interrupt
-        unsigned long duration = flashbulbParams.flashbulb.flashDuration + 
-                                flashbulbParams.flashbulb.fadeDuration + 
-                                flashbulbParams.flashbulb.transitionDuration;
-        
+        unsigned long duration = flashbulbParams.flashbulb.flashDuration + flashbulbParams.flashbulb.fadeDuration
+            + flashbulbParams.flashbulb.transitionDuration;
+
         Serial.print("Test interrupt: Flashbulb pattern on ");
         Serial.print(numRandomPins);
         Serial.print(" pins (");
         for (int i = 0; i < numRandomPins; i++) {
             Serial.print(randomPins[i]);
-            if (i < numRandomPins - 1) Serial.print(", ");
+            if (i < numRandomPins - 1)
+                Serial.print(", ");
         }
         Serial.print(") - Flash: ");
         Serial.print(flashbulbParams.flashbulb.flashDuration);
@@ -387,20 +399,23 @@ void testInterrupts()
         Serial.print("ms, Total: ");
         Serial.print(duration);
         Serial.println("ms");
-        
+
         // Trigger the interrupt
         mainProgram->triggerInterrupt(PATTERN_FLASHBULB, randomPins, numRandomPins, duration, flashbulbParams);
     }
 }
+#endif
 
-void loop() 
+void loop()
 {
+#ifdef USE_INTERRUPTS
     // Handle WebSocket events
     webSocket.loop();
-    
+
     // Test interrupts (comment out when not needed)
     testInterrupts();
-    
+#endif
+
     // Update main program (patterns and interrupts)
     mainProgram->update();
 }
