@@ -96,7 +96,7 @@ void setup()
     FastLED.show();
 
     // Create a program with 6 segments
-    mainProgram = new Program(6);
+    mainProgram = new Program(1);
 
     // Segment 1: Spin pattern test on all pins for 15 seconds
     int allPins[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
@@ -112,80 +112,80 @@ void setup()
     spinParams.spin.blend = true; // Smooth color transitions using FastLED lerp8
     mainProgram->addSegment(0, new Segment(PATTERN_SPIN, allPins, 8, 15, spinParams));
 
-    // Segment 2: Multi-color breathing on all pins for 10 seconds
-    static CRGB breathingPalette[] = { CRGB::Purple, CRGB::Magenta, CRGB::Blue, CRGB::Cyan };
-    PatternParams breathingParams;
-    breathingParams.breathing.speed = 50;
-    breathingParams.breathing.palette = breathingPalette;
-    breathingParams.breathing.paletteSize = 4;
-    mainProgram->addSegment(1, new Segment(PATTERN_BREATHING, allPins, 8, 10, breathingParams));
+    // // Segment 2: Multi-color breathing on all pins for 10 seconds
+    // static CRGB breathingPalette[] = { CRGB::Purple, CRGB::Magenta, CRGB::Blue, CRGB::Cyan };
+    // PatternParams breathingParams;
+    // breathingParams.breathing.speed = 50;
+    // breathingParams.breathing.palette = breathingPalette;
+    // breathingParams.breathing.paletteSize = 4;
+    // mainProgram->addSegment(1, new Segment(PATTERN_BREATHING, allPins, 8, 10, breathingParams));
 
-    // Segment 3: Flame pattern on all pins for 15 seconds
-    PatternParams flameParams;
-    flameParams.flame.speed = 80;
-    flameParams.flame.cooling = 55;
-    flameParams.flame.sparking = 120;
-    mainProgram->addSegment(2, new Segment(PATTERN_FLAME, allPins, 8, 10, flameParams, 1));
+    // // Segment 3: Flame pattern on all pins for 15 seconds
+    // PatternParams flameParams;
+    // flameParams.flame.speed = 80;
+    // flameParams.flame.cooling = 55;
+    // flameParams.flame.sparking = 120;
+    // mainProgram->addSegment(2, new Segment(PATTERN_FLAME, allPins, 8, 10, flameParams, 1));
 
-    // Segment 4: Grow pattern on all pins for 20 seconds
-    static CRGB growPalette[] = { CRGB::Cyan, CRGB::Blue, CRGB::Purple, CRGB::Magenta, CRGB::Red, CRGB::Orange };
-    PatternParams growParams;
-    growParams.grow.speed = 60;
-    growParams.grow.n = 1;
-    growParams.grow.fadeDelay = 100;
-    growParams.grow.holdDelay = 2000;
-    growParams.grow.palette = growPalette;
-    growParams.grow.paletteSize = 6;
-    growParams.grow.transitionSpeed = 40;
-    growParams.grow.offsetDelay = 1000;
-    mainProgram->addSegment(3, new Segment(PATTERN_GROW, allPins, 8, 10, growParams, 1));
+    // // Segment 4: Grow pattern on all pins for 20 seconds
+    // static CRGB growPalette[] = { CRGB::Cyan, CRGB::Blue, CRGB::Purple, CRGB::Magenta, CRGB::Red, CRGB::Orange };
+    // PatternParams growParams;
+    // growParams.grow.speed = 60;
+    // growParams.grow.n = 1;
+    // growParams.grow.fadeDelay = 100;
+    // growParams.grow.holdDelay = 2000;
+    // growParams.grow.palette = growPalette;
+    // growParams.grow.paletteSize = 6;
+    // growParams.grow.transitionSpeed = 40;
+    // growParams.grow.offsetDelay = 1000;
+    // mainProgram->addSegment(3, new Segment(PATTERN_GROW, allPins, 8, 10, growParams, 1));
 
-    // Segment 5: Multi-pattern segment - different patterns on different pins
-    // Create pattern instances for different pin groups
-    PatternInstance* patterns[3];
+    // // Segment 5: Multi-pattern segment - different patterns on different pins
+    // // Create pattern instances for different pin groups
+    // PatternInstance* patterns[3];
 
-    // Breathing on pins 0-2
-    int breathingPins[] = { 0, 1, 2 };
-    static CRGB multiBreathingPalette[] = { CRGB(0, 255, 128), CRGB::Green, CRGB::Teal };
-    PatternParams multiBreathingParams;
-    multiBreathingParams.breathing.speed = 60;
-    multiBreathingParams.breathing.palette = multiBreathingPalette;
-    multiBreathingParams.breathing.paletteSize = 3;
-    patterns[0] = new PatternInstance(PATTERN_BREATHING, breathingPins, 3, multiBreathingParams);
+    // // Breathing on pins 0-2
+    // int breathingPins[] = { 0, 1, 2 };
+    // static CRGB multiBreathingPalette[] = { CRGB(0, 255, 128), CRGB::Green, CRGB::Teal };
+    // PatternParams multiBreathingParams;
+    // multiBreathingParams.breathing.speed = 60;
+    // multiBreathingParams.breathing.palette = multiBreathingPalette;
+    // multiBreathingParams.breathing.paletteSize = 3;
+    // patterns[0] = new PatternInstance(PATTERN_BREATHING, breathingPins, 3, multiBreathingParams);
 
-    // Flame on pins 3-5
-    int flamePins[] = { 3, 4, 5 };
-    PatternParams multiFlameParams;
-    multiFlameParams.flame.speed = 90;
-    multiFlameParams.flame.cooling = 60;
-    multiFlameParams.flame.sparking = 130;
-    patterns[1] = new PatternInstance(PATTERN_FLAME, flamePins, 3, multiFlameParams);
+    // // Flame on pins 3-5
+    // int flamePins[] = { 3, 4, 5 };
+    // PatternParams multiFlameParams;
+    // multiFlameParams.flame.speed = 90;
+    // multiFlameParams.flame.cooling = 60;
+    // multiFlameParams.flame.sparking = 130;
+    // patterns[1] = new PatternInstance(PATTERN_FLAME, flamePins, 3, multiFlameParams);
 
-    int growPins[] = { 6, 7 };
-    PatternParams growParams2;
-    growParams2.grow.speed = 60;
-    growParams2.grow.n = 1;
-    growParams2.grow.fadeDelay = 100;
-    growParams2.grow.holdDelay = 2000;
-    growParams2.grow.palette = growPalette;
-    growParams2.grow.paletteSize = 6;
-    growParams2.grow.transitionSpeed = 40;
-    growParams2.grow.offsetDelay = 1000;
-    patterns[2] = new PatternInstance(PATTERN_GROW, growPins, 2, growParams2);
+    // int growPins[] = { 6, 7 };
+    // PatternParams growParams2;
+    // growParams2.grow.speed = 60;
+    // growParams2.grow.n = 1;
+    // growParams2.grow.fadeDelay = 100;
+    // growParams2.grow.holdDelay = 2000;
+    // growParams2.grow.palette = growPalette;
+    // growParams2.grow.paletteSize = 6;
+    // growParams2.grow.transitionSpeed = 40;
+    // growParams2.grow.offsetDelay = 1000;
+    // patterns[2] = new PatternInstance(PATTERN_GROW, growPins, 2, growParams2);
 
-    mainProgram->addSegment(4, new Segment(patterns, 3, 5));
+    // mainProgram->addSegment(4, new Segment(patterns, 3, 5));
 
-    // Segment 6: Pop pattern with random pins and acceleration
-    static CRGB popPalette[]
-        = { CRGB::Red, CRGB::Orange, CRGB::Yellow, CRGB::Green, CRGB::Blue, CRGB::Purple, CRGB::Pink, CRGB::White };
-    PatternParams popParams;
-    popParams.pop.speed = 10; // Maximum speed after acceleration
-    popParams.pop.holdDelay = 300; // Hold each color for 300ms
-    popParams.pop.palette = popPalette;
-    popParams.pop.paletteSize = 8;
-    popParams.pop.random = true; // Randomize pin order
-    popParams.pop.accelerationTime = 8; // Accelerate over 8 seconds
-    mainProgram->addSegment(5, new Segment(PATTERN_POP, allPins, 8, 20, popParams));
+    // // Segment 6: Pop pattern with random pins and acceleration
+    // static CRGB popPalette[]
+    //     = { CRGB::Red, CRGB::Orange, CRGB::Yellow, CRGB::Green, CRGB::Blue, CRGB::Purple, CRGB::Pink, CRGB::White };
+    // PatternParams popParams;
+    // popParams.pop.speed = 10; // Maximum speed after acceleration
+    // popParams.pop.holdDelay = 300; // Hold each color for 300ms
+    // popParams.pop.palette = popPalette;
+    // popParams.pop.paletteSize = 8;
+    // popParams.pop.random = true; // Randomize pin order
+    // popParams.pop.accelerationTime = 8; // Accelerate over 8 seconds
+    // mainProgram->addSegment(5, new Segment(PATTERN_POP, allPins, 8, 20, popParams));
 
     mainProgram->start();
 

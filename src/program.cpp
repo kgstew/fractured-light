@@ -269,13 +269,19 @@ void Program::update()
         if (shouldFinish) {
             if (isFlashbulb) {
                 // Flashbulb completed, restore immediately
+                // Don't call stop() on flashbulb - it handles its own cleanup and 
+                // stop() would clear LEDs to black causing the blink issue
                 if (interruptSegment != nullptr) {
-                    interruptSegment->stop();
                     delete interruptSegment;
                     interruptSegment = nullptr;
                 }
                 resumeCurrentSegment();
                 interruptState = INTERRUPT_NONE;
+                
+                // Immediately update the main segment to populate LEDs with pattern colors
+                if (currentSegment < numSegments && segments[currentSegment] != nullptr) {
+                    segments[currentSegment]->update();
+                }
             } else {
                 interruptState = INTERRUPT_TRANSITIONING_IN;
                 transitionStartTime = millis();
