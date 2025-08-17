@@ -47,8 +47,8 @@ void setup()
     FastLED.clear();
     FastLED.show();
 
-    // Create a program with 6 segments
-    mainProgram = new Program(6);
+    // Create a program with 7 segments
+    mainProgram = new Program(7);
 
     // Segment 1: Spin pattern test on all pins for 15 seconds
     int allPins[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
@@ -138,6 +138,82 @@ void setup()
     popParams.pop.random = true; // Randomize pin order
     popParams.pop.accelerationTime = 8; // Accelerate over 8 seconds
     mainProgram->addSegment(5, new Segment(PATTERN_POP, allPins, 8, 20, popParams));
+
+    // Segment 7: Complex multi-pattern symphony - showcase of all features
+    PatternInstance* symphonyPatterns[4];
+
+    // Pattern 1: Pulsing ocean colors on pins 0-1 with smooth breathing
+    int oceanPins[] = { 0, 1 };
+    static CRGB oceanPalette[] = { 
+        CRGB(0, 100, 150),    // Deep blue
+        CRGB(0, 150, 200),    // Ocean blue  
+        CRGB(0, 200, 255),    // Bright cyan
+        CRGB(100, 255, 200),  // Aqua green
+        CRGB(0, 255, 255)     // Pure cyan
+    };
+    PatternParams oceanParams;
+    oceanParams.breathing.speed = 25;
+    oceanParams.breathing.palette = oceanPalette;
+    oceanParams.breathing.paletteSize = 5;
+    symphonyPatterns[0] = new PatternInstance(PATTERN_BREATHING, oceanPins, 2, oceanParams);
+
+    // Pattern 2: Rapid spinning rainbow on pins 2-3 with blending
+    int rainbowPins[] = { 2, 3 };
+    static CRGB rainbowPalette[] = { 
+        CRGB::Red, CRGB::Orange, CRGB::Yellow, CRGB::Green, 
+        CRGB::Blue, CRGB::Indigo, CRGB::Violet, CRGB::Magenta 
+    };
+    PatternParams rainbowParams;
+    rainbowParams.spin.speed = 90;
+    rainbowParams.spin.separation = 8;
+    rainbowParams.spin.span = 12;
+    rainbowParams.spin.palette = rainbowPalette;
+    rainbowParams.spin.paletteSize = 8;
+    rainbowParams.spin.loop = true;
+    rainbowParams.spin.continuous = false;
+    rainbowParams.spin.blend = true;
+    symphonyPatterns[1] = new PatternInstance(PATTERN_SPIN, rainbowPins, 2, rainbowParams);
+
+    // Pattern 3: Growing sunset on pins 4-5 with staggered timing
+    int sunsetPins[] = { 4, 5 };
+    static CRGB sunsetPalette[] = { 
+        CRGB(255, 40, 0),     // Deep red
+        CRGB(255, 100, 0),    // Orange-red
+        CRGB(255, 150, 0),    // Orange
+        CRGB(255, 200, 50),   // Yellow-orange
+        CRGB(255, 255, 100)   // Warm yellow
+    };
+    PatternParams sunsetParams;
+    sunsetParams.grow.speed = 45;
+    sunsetParams.grow.n = 3;
+    sunsetParams.grow.fadeDelay = 150;
+    sunsetParams.grow.holdDelay = 3000;
+    sunsetParams.grow.palette = sunsetPalette;
+    sunsetParams.grow.paletteSize = 5;
+    sunsetParams.grow.transitionSpeed = 30;
+    sunsetParams.grow.offsetDelay = 2000;
+    symphonyPatterns[2] = new PatternInstance(PATTERN_GROW, sunsetPins, 2, sunsetParams);
+
+    // Pattern 4: Accelerating neon flash on pins 6-7
+    int neonPins[] = { 6, 7 };
+    static CRGB neonPalette[] = { 
+        CRGB(255, 0, 255),    // Magenta
+        CRGB(0, 255, 255),    // Cyan
+        CRGB(255, 255, 0),    // Yellow
+        CRGB(255, 0, 128),    // Hot pink
+        CRGB(128, 255, 0),    // Lime green
+        CRGB(255, 128, 0)     // Neon orange
+    };
+    PatternParams neonParams;
+    neonParams.pop.speed = 80;
+    neonParams.pop.holdDelay = 200;
+    neonParams.pop.palette = neonPalette;
+    neonParams.pop.paletteSize = 6;
+    neonParams.pop.random = true;
+    neonParams.pop.accelerationTime = 15;
+    symphonyPatterns[3] = new PatternInstance(PATTERN_POP, neonPins, 2, neonParams);
+
+    mainProgram->addSegment(6, new Segment(symphonyPatterns, 4, 25));
 
     mainProgram->start();
 }
