@@ -83,14 +83,14 @@ void popPattern(int pins[], int numPins, int speed, int holdDelay, CRGB palette[
         // If we haven't filled the current pin yet, fill it
         if (!pinFilled) {
             int pin = pinSequence[currentPin];
-            int startIndex = pin * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN;
-            int totalLeds = NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN;
-            
+            CRGB* ledArray = getLedArrayForPin(pin);
+            int totalLeds = MAX_LEDS_PER_PIN;
+
             CRGB color = palette[currentColorIndex % paletteSize];
-            
+
             // Fill all LEDs on this pin with the current color
             for (int i = 0; i < totalLeds; i++) {
-                leds[startIndex + i] = color;
+                ledArray[i] = color;
             }
             
             pinFilled = true;
@@ -100,11 +100,11 @@ void popPattern(int pins[], int numPins, int speed, int holdDelay, CRGB palette[
         else if (currentTime - fillStartTime >= holdDelay) {
             // Turn off current pin
             int pin = pinSequence[currentPin];
-            int startIndex = pin * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN;
-            int totalLeds = NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN;
-            
+            CRGB* ledArray = getLedArrayForPin(pin);
+            int totalLeds = MAX_LEDS_PER_PIN;
+
             for (int i = 0; i < totalLeds; i++) {
-                leds[startIndex + i] = CRGB::Black;
+                ledArray[i] = CRGB::Black;
             }
             
             // Move to next pin and color

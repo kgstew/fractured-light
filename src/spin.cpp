@@ -23,8 +23,8 @@ void spinPattern(int pins[], int numPins, int speed, int separation, int span, C
         
         for (int p = 0; p < numPins; p++) {
             int pin = pins[p];
-            int startIndex = pin * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN;
-            int totalLeds = NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN;
+            CRGB* ledArray = getLedArrayForPin(pin);
+            int totalLeds = MAX_LEDS_PER_PIN;
             
             if (continuous) {
                 // Continuous mode: light all LEDs transitioning through palette colors
@@ -48,12 +48,12 @@ void spinPattern(int pins[], int numPins, int speed, int separation, int span, C
                     }
                     
                     int ledPos = reverse ? (totalLeds - 1 - i) : i;
-                    leds[startIndex + ledPos] = color;
+                    ledArray[ledPos] = color;
                 }
             } else {
                 // Clear all LEDs for this pin first
                 for (int i = 0; i < totalLeds; i++) {
-                    leds[startIndex + i] = CRGB::Black;
+                    ledArray[i] = CRGB::Black;
                 }
                 
                 if (loop) {
@@ -77,7 +77,7 @@ void spinPattern(int pins[], int numPins, int speed, int separation, int span, C
                             }
                             
                             int ledPos = reverse ? (totalLeds - 1 - i) : i;
-                            leds[startIndex + ledPos] = color;
+                            ledArray[ledPos] = color;
                         }
                         // Separation areas remain black (already cleared above)
                     }
@@ -106,7 +106,7 @@ void spinPattern(int pins[], int numPins, int speed, int separation, int span, C
                                 color = palette[colorIndex];
                             }
                             
-                            leds[startIndex + ledPos] = color;
+                            ledArray[ledPos] = color;
                         }
                     }
                 }

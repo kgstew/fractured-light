@@ -3,11 +3,9 @@
 #include <Arduino.h>
 #include <FastLED.h>
 
-#define NUM_LEDS_PER_STRIP 122
-#define NUM_STRIPS_PER_PIN 2
+#define MAX_LEDS_PER_PIN 122
 #define NUM_PINS 8
-#define TOTAL_LEDS (NUM_PINS * NUM_STRIPS_PER_PIN * NUM_LEDS_PER_STRIP)
-#define COLOR_ORDER GRB
+#define COLOR_ORDER RGB
 
 #define PIN1 23
 #define PIN2 18
@@ -18,79 +16,71 @@
 #define PIN7 15
 #define PIN8 12
 
-CRGB leds[TOTAL_LEDS];
+CRGB leds1[MAX_LEDS_PER_PIN];
+CRGB leds2[MAX_LEDS_PER_PIN];
+CRGB leds3[MAX_LEDS_PER_PIN];
+CRGB leds4[MAX_LEDS_PER_PIN];
+CRGB leds5[MAX_LEDS_PER_PIN];
+CRGB leds6[MAX_LEDS_PER_PIN];
+CRGB leds7[MAX_LEDS_PER_PIN];
+CRGB leds8[MAX_LEDS_PER_PIN];
 Program* mainProgram;
+
+// Helper function to get LED array for a specific pin (0-indexed)
+CRGB* getLedArrayForPin(int pin) {
+    switch (pin) {
+        case 0: return leds1;
+        case 1: return leds2;
+        case 2: return leds3;
+        case 3: return leds4;
+        case 4: return leds5;
+        case 5: return leds6;
+        case 6: return leds7;
+        case 7: return leds8;
+        default: return nullptr;
+    }
+}
 
 void setup()
 {
     Serial.begin(115200);
 
-    // Configure FastLED for 8 pins, each controlling 2 strips of 122 LEDs
-    FastLED.addLeds<WS2812B, PIN1, COLOR_ORDER>(
-        leds, 0 * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN, NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN);
-    FastLED.addLeds<WS2812B, PIN2, COLOR_ORDER>(
-        leds, 1 * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN, NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN);
-    FastLED.addLeds<WS2812B, PIN3, COLOR_ORDER>(
-        leds, 2 * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN, NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN);
-    FastLED.addLeds<WS2812B, PIN4, COLOR_ORDER>(
-        leds, 3 * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN, NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN);
-    FastLED.addLeds<WS2812B, PIN5, COLOR_ORDER>(
-        leds, 4 * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN, NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN);
-    FastLED.addLeds<WS2812B, PIN6, COLOR_ORDER>(
-        leds, 5 * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN, NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN);
-    FastLED.addLeds<WS2812B, PIN7, COLOR_ORDER>(
-        leds, 6 * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN, NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN);
-    FastLED.addLeds<WS2812B, PIN8, COLOR_ORDER>(
-        leds, 7 * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN, NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN);
+    // Configure FastLED for each pin independently (up to 122 LEDs per pin)
+    FastLED.addLeds<WS2812B, PIN1, COLOR_ORDER>(leds1, MAX_LEDS_PER_PIN);
+    FastLED.addLeds<WS2812B, PIN2, COLOR_ORDER>(leds2, MAX_LEDS_PER_PIN);
+    FastLED.addLeds<WS2812B, PIN3, COLOR_ORDER>(leds3, MAX_LEDS_PER_PIN);
+    FastLED.addLeds<WS2812B, PIN4, COLOR_ORDER>(leds4, MAX_LEDS_PER_PIN);
+    FastLED.addLeds<WS2812B, PIN5, COLOR_ORDER>(leds5, MAX_LEDS_PER_PIN);
+    FastLED.addLeds<WS2812B, PIN6, COLOR_ORDER>(leds6, MAX_LEDS_PER_PIN);
+    FastLED.addLeds<WS2812B, PIN7, COLOR_ORDER>(leds7, MAX_LEDS_PER_PIN);
+    FastLED.addLeds<WS2812B, PIN8, COLOR_ORDER>(leds8, MAX_LEDS_PER_PIN);
 
     FastLED.setBrightness(255);
     FastLED.clear();
     FastLED.show();
 
-    // Create a program with 7 segments
-    mainProgram = new Program(4);
+    Serial.println(
+        "FastLED initialized for " + String(NUM_PINS) + " pins, up to " + String(MAX_LEDS_PER_PIN) + " LEDs each");
 
-    // Segment 1: Spin pattern test on all pins for 15 seconds
-    int allPins[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
-    static CRGB spinPalette[] = { CRGB::Red, CRGB::Blue, CRGB::Green, CRGB::Yellow };
-    PatternParams spinParams;
-    spinParams.spin.speed = 75; // Medium-fast speed
-    spinParams.spin.separation = 20; // 20 LEDs of black space between colors
-    spinParams.spin.span = 15; // Each color fills 15 LEDs
-    spinParams.spin.palette = spinPalette;
-    spinParams.spin.paletteSize = 4;
-    spinParams.spin.loop = true; // Fill entire strip with repeating pattern
-    spinParams.spin.continuous = true; // Use span/separation pattern instead of all LEDs
-    spinParams.spin.blend = true; // Smooth color transitions using FastLED lerp8
-    mainProgram->addSegment(0, new Segment(PATTERN_SPIN, allPins, 8, 15, spinParams));
+    // // Segment 3: Flame pattern on all pins for 15 seconds
+    // PatternParams flameParams;
+    // flameParams.flame.speed = 80;
+    // flameParams.flame.cooling = 55;
+    // flameParams.flame.sparking = 120;
+    // mainProgram->addSegment(2, new Segment(PATTERN_FLAME, allPins, 8, 10, flameParams, 1));
 
-    // Segment 2: Multi-color breathing on all pins for 10 seconds
-    static CRGB breathingPalette[] = { CRGB::Purple, CRGB::Magenta, CRGB::Blue, CRGB::Cyan };
-    PatternParams breathingParams;
-    breathingParams.breathing.speed = 50;
-    breathingParams.breathing.palette = breathingPalette;
-    breathingParams.breathing.paletteSize = 4;
-    mainProgram->addSegment(1, new Segment(PATTERN_BREATHING, allPins, 8, 10, breathingParams));
-
-    // Segment 3: Flame pattern on all pins for 15 seconds
-    PatternParams flameParams;
-    flameParams.flame.speed = 80;
-    flameParams.flame.cooling = 55;
-    flameParams.flame.sparking = 120;
-    mainProgram->addSegment(2, new Segment(PATTERN_FLAME, allPins, 8, 10, flameParams, 1));
-
-    // Segment 4: Grow pattern on all pins for 20 seconds
-    static CRGB growPalette[] = { CRGB::Cyan, CRGB::Blue, CRGB::Purple, CRGB::Magenta, CRGB::Red, CRGB::Orange };
-    PatternParams growParams;
-    growParams.grow.speed = 60;
-    growParams.grow.n = 1;
-    growParams.grow.fadeDelay = 100;
-    growParams.grow.holdDelay = 2000;
-    growParams.grow.palette = growPalette;
-    growParams.grow.paletteSize = 6;
-    growParams.grow.transitionSpeed = 40;
-    growParams.grow.offsetDelay = 1000;
-    mainProgram->addSegment(3, new Segment(PATTERN_GROW, allPins, 8, 10, growParams, 1));
+    // // Segment 4: Grow pattern on all pins for 20 seconds
+    // static CRGB growPalette[] = { CRGB::Cyan, CRGB::Blue, CRGB::Purple, CRGB::Magenta, CRGB::Red, CRGB::Orange };
+    // PatternParams growParams;
+    // growParams.grow.speed = 60;
+    // growParams.grow.n = 1;
+    // growParams.grow.fadeDelay = 100;
+    // growParams.grow.holdDelay = 2000;
+    // growParams.grow.palette = growPalette;
+    // growParams.grow.paletteSize = 6;
+    // growParams.grow.transitionSpeed = 40;
+    // growParams.grow.offsetDelay = 1000;
+    // mainProgram->addSegment(3, new Segment(PATTERN_GROW, allPins, 8, 10, growParams, 1));
 
     // // Segment 5: Multi-pattern segment - different patterns on different pins
     // // Create pattern instances for different pin groups
@@ -215,7 +205,25 @@ void setup()
 
     // mainProgram->addSegment(6, new Segment(symphonyPatterns, 4, 25));
 
-    mainProgram->start();
+    // mainProgram->start();
 }
 
-void loop() { mainProgram->update(); }
+void loop()
+{
+    // Turn on all LEDs on each pin in red
+    fill_solid(leds1, MAX_LEDS_PER_PIN, CRGB::Red);
+    fill_solid(leds2, MAX_LEDS_PER_PIN, CRGB::Red);
+    fill_solid(leds3, MAX_LEDS_PER_PIN, CRGB::Red);
+    fill_solid(leds4, MAX_LEDS_PER_PIN, CRGB::Red);
+    fill_solid(leds5, MAX_LEDS_PER_PIN, CRGB::Red);
+    fill_solid(leds6, MAX_LEDS_PER_PIN, CRGB::Red);
+    fill_solid(leds7, MAX_LEDS_PER_PIN, CRGB::Red);
+    fill_solid(leds8, MAX_LEDS_PER_PIN, CRGB::Red);
+    FastLED.show();
+    delay(2000);
+
+    // Clear all LEDs
+    FastLED.clear();
+    FastLED.show();
+    delay(1000);
+}

@@ -84,11 +84,10 @@ void Segment::stop()
         PatternInstance* pattern = patterns[patternIdx];
         for (int p = 0; p < pattern->numPins; p++) {
             int pin = pattern->pins[p];
-            int startIndex = pin * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN;
-            int totalLeds = NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN;
+            CRGB* ledArray = getLedArrayForPin(pin);
 
-            for (int i = 0; i < totalLeds; i++) {
-                leds[startIndex + i] = CRGB::Black;
+            for (int i = 0; i < MAX_LEDS_PER_PIN; i++) {
+                ledArray[i] = CRGB::Black;
             }
         }
     }

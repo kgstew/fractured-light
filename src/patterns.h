@@ -3,10 +3,19 @@
 
 #include <FastLED.h>
 
-#define NUM_LEDS_PER_STRIP 122
-#define NUM_STRIPS_PER_PIN 2
+#define MAX_LEDS_PER_PIN 122
 
-extern CRGB leds[];
+extern CRGB leds1[];
+extern CRGB leds2[];
+extern CRGB leds3[];
+extern CRGB leds4[];
+extern CRGB leds5[];
+extern CRGB leds6[];
+extern CRGB leds7[];
+extern CRGB leds8[];
+
+// Helper function to get LED array for a specific pin (0-indexed)
+CRGB* getLedArrayForPin(int pin);
 
 void breathingPattern(int pins[], int numPins, int speed, CRGB palette[], int paletteSize, bool reverse = false);
 void flamepattern(int pins[], int numPins, int speed, int cooling, int sparking, bool reverse = false);

@@ -2,7 +2,7 @@
 #include <Arduino.h>
 
 static unsigned long lastUpdate[8] = { 0 };
-static uint8_t heat[8][NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN];
+static uint8_t heat[8][MAX_LEDS_PER_PIN];
 
 void flamepattern(int pins[], int numPins, int speed, int cooling, int sparking, bool reverse)
 {
@@ -20,17 +20,17 @@ void flamepattern(int pins[], int numPins, int speed, int cooling, int sparking,
         if (currentTime - lastUpdate[pin] >= interval) {
             lastUpdate[pin] = currentTime;
 
-            int startIndex = pin * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN;
-            int ledsPerPin = NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN;
+            CRGB* ledArray = getLedArrayForPin(pin);
+            if (ledArray == nullptr) continue;
 
             // Step 1: Cool down every cell with slight random variation
             uint8_t pinCooling = cooling + random8(0, 11) - 5; // ±5 variation
-            for (int i = 0; i < ledsPerPin; i++) {
-                heat[pin][i] = qsub8(heat[pin][i], random8(0, ((pinCooling * 10) / ledsPerPin) + 2));
+            for (int i = 0; i < MAX_LEDS_PER_PIN; i++) {
+                heat[pin][i] = qsub8(heat[pin][i], random8(0, ((pinCooling * 10) / MAX_LEDS_PER_PIN) + 2));
             }
 
             // Step 2: Heat from each cell drifts 'up' and diffuses a little
-            for (int k = ledsPerPin - 1; k >= 2; k--) {
+            for (int k = MAX_LEDS_PER_PIN - 1; k >= 2; k--) {
                 heat[pin][k] = (heat[pin][k - 1] + heat[pin][k - 2] + heat[pin][k - 2]) / 3;
             }
 
@@ -42,15 +42,15 @@ void flamepattern(int pins[], int numPins, int speed, int cooling, int sparking,
             }
 
             // Step 4: Map from heat cells to LED colors using HeatColor palette
-            for (int j = 0; j < ledsPerPin; j++) {
+            for (int j = 0; j < MAX_LEDS_PER_PIN; j++) {
                 // Scale heat value to palette index
                 uint8_t colorindex = scale8(heat[pin][j], 240);
                 CRGB color = HeatColor(colorindex);
 
                 if (reverse) {
-                    leds[startIndex + (ledsPerPin - 1 - j)] = color;
+                    ledArray[MAX_LEDS_PER_PIN - 1 - j] = color;
                 } else {
-                    leds[startIndex + j] = color;
+                    ledArray[j] = color;
                 }
             }
         }
@@ -63,7 +63,7 @@ void resetFlamePattern()
 {
     for (int i = 0; i < 8; i++) {
         lastUpdate[i] = 0;
-        for (int j = 0; j < NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN; j++) {
+        for (int j = 0; j < MAX_LEDS_PER_PIN; j++) {
             heat[i][j] = 0;
         }
     }

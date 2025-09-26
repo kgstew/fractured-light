@@ -64,16 +64,17 @@ void breathingPattern(int pins[], int numPins, int speed, CRGB palette[], int pa
 
         for (int p = 0; p < numPins; p++) {
             int pin = pins[p];
-            int startIndex = pin * NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN;
-            int endIndex = startIndex + (NUM_LEDS_PER_STRIP * NUM_STRIPS_PER_PIN);
+            CRGB* ledArray = getLedArrayForPin(pin);
 
-            if (reverse) {
-                for (int i = endIndex - 1; i >= startIndex; i--) {
-                    leds[i] = scaledColor;
-                }
-            } else {
-                for (int i = startIndex; i < endIndex; i++) {
-                    leds[i] = scaledColor;
+            if (ledArray != nullptr) {
+                if (reverse) {
+                    for (int i = MAX_LEDS_PER_PIN - 1; i >= 0; i--) {
+                        ledArray[i] = scaledColor;
+                    }
+                } else {
+                    for (int i = 0; i < MAX_LEDS_PER_PIN; i++) {
+                        ledArray[i] = scaledColor;
+                    }
                 }
             }
         }
