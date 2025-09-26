@@ -1,5 +1,6 @@
 #include "patterns.h"
 #include "program.h"
+#include "program_pattern_one.h"
 #include <Arduino.h>
 #include <FastLED.h>
 
@@ -71,20 +72,8 @@ void setup()
     Serial.println(
         "FastLED initialized for " + String(NUM_PINS) + " pins, up to " + String(MAX_LEDS_PER_PIN) + " LEDs each");
 
-    // Create a program with multiple segments
-    mainProgram = new Program(1);
-
-    // All pins array
-    int allPins[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
-
-    // Segment 1: Multi-color breathing on all pins for 10 seconds
-    static CRGB breathingPalette[] = { CRGB::Purple, CRGB::Magenta, CRGB::Blue, CRGB::Cyan };
-    PatternParams breathingParams;
-    breathingParams.breathing.speed = 50;
-    breathingParams.breathing.palette = breathingPalette;
-    breathingParams.breathing.paletteSize = 4;
-    mainProgram->addSegment(0, new Segment(PATTERN_BREATHING, allPins, 8, 10, breathingParams));
-
+    // Create the main pattern program
+    mainProgram = createPatternProgramOne();
     mainProgram->start();
 }
 
