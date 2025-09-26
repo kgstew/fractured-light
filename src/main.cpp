@@ -3,7 +3,6 @@
 #include <Arduino.h>
 #include <FastLED.h>
 
-#define MAX_LEDS_PER_PIN 122
 #define NUM_PINS 8
 #define COLOR_ORDER RGB
 
@@ -27,17 +26,27 @@ CRGB leds8[MAX_LEDS_PER_PIN];
 Program* mainProgram;
 
 // Helper function to get LED array for a specific pin (0-indexed)
-CRGB* getLedArrayForPin(int pin) {
+CRGB* getLedArrayForPin(int pin)
+{
     switch (pin) {
-        case 0: return leds1;
-        case 1: return leds2;
-        case 2: return leds3;
-        case 3: return leds4;
-        case 4: return leds5;
-        case 5: return leds6;
-        case 6: return leds7;
-        case 7: return leds8;
-        default: return nullptr;
+    case 0:
+        return leds1;
+    case 1:
+        return leds2;
+    case 2:
+        return leds3;
+    case 3:
+        return leds4;
+    case 4:
+        return leds5;
+    case 5:
+        return leds6;
+    case 6:
+        return leds7;
+    case 7:
+        return leds8;
+    default:
+        return nullptr;
     }
 }
 
