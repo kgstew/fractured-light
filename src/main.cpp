@@ -1,6 +1,6 @@
 #include "patterns.h"
 #include "program.h"
-#include "program_pattern_one.h"
+#include "programs/program_pattern_one.h"
 #include <Arduino.h>
 #include <FastLED.h>
 
@@ -77,7 +77,4 @@ void setup()
     mainProgram->start();
 }
 
-void loop()
-{
-    mainProgram->update();
-}
+void loop() { mainProgram->update(); }
